@@ -1,6 +1,5 @@
 import Link from "next/link";
-import {getServerSession} from "next-auth";
-import {authOptions} from "@/lib/auth";
+import {getActiveSession} from "@/lib/admin";
 import {redirect} from "next/navigation";
 import {connectDB} from "@/lib/mongodb";
 import User from "@/models/User";
@@ -9,7 +8,7 @@ import AdminUserTable from "@/components/admin-user-table";
 export const dynamic="force-dynamic";
 
 export default async function AdminUsersPage(){
-  const session=await getServerSession(authOptions);
+  const session=await getActiveSession();
   if(!session)redirect("/login");
   if(session.user.role!=="admin")redirect("/account");
 
