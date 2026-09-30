@@ -1,5 +1,4 @@
 import "dotenv/config";
-import {createServer} from "node:http";
 import fs from "node:fs/promises";
 import path from "node:path";
 import {spawn} from "node:child_process";
@@ -47,19 +46,37 @@ async function main(){
         "content-type":"application/x-www-form-urlencoded",
         "cookie":csrfCookie
       },
-      body:new URLSearchParams({csrfToken:String(csrf.csrfToken),email:String(email),password:String(password),json:"true"}).toString(),
+      body:new URLSearchParams({
+        csrfToken:String(csrf.csrfToken),
+        email:String(email),
+        password:String(password),
+        json:"true"
+      }).toString(),
       redirect:"manual"
     });
 
-    const cookies=(signIn.headers.getSetCookie?.()||[]).join("; ");
+    const cookies=(signIn.headers.getSetCookie?.()||[])
+      .map(value=>value.split(";",1)[0])
+      .join("; ");
+
     if(signIn.status<200||signIn.status>=400)throw new Error("Login failed with status "+signIn.status);
 
+    const seed=Date.now();
     const png=await sharp({
-      create:{width:1920,height:1080,channels:3,background:{r:34,g:40,b:55}}
+      create:{
+        width:320,
+        height:180,
+        channels:3,
+        background:{
+          r:seed%256,
+          g:(seed>>8)%256,
+          b:(seed>>16)%256
+        }
+      }
     }).png().toBuffer();
 
     const form=new FormData();
-    form.set("title","Publisher Smoke Test Wallpaper");
+    form.set("title","Publisher Smoke Test Wallpaper "+seed);
     form.set("category","Testing");
     form.set("file",new Blob([png],{type:"image/png"}),"publisher-smoke-test.png");
 
