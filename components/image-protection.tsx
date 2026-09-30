@@ -4,11 +4,16 @@ import {useEffect} from "react";
 
 export default function ImageProtection(){
   useEffect(()=>{
+    const isImageTarget=(target:EventTarget|null)=>{
+      return target instanceof Element && Boolean(target.closest("img"));
+    };
+
     const protectImages=(event:Event)=>{
-      const target=event.target;
-      if(target instanceof Element && target.closest("img")){
-        event.preventDefault();
-      }
+      if(isImageTarget(event.target))event.preventDefault();
+    };
+
+    const protectImageContextMenu=(event:MouseEvent)=>{
+      if(isImageTarget(event.target))event.preventDefault();
     };
 
     const blockUploadDrop=(event:Event)=>{
@@ -25,6 +30,7 @@ export default function ImageProtection(){
     };
 
     document.addEventListener("dragstart",protectImages,true);
+    document.addEventListener("contextmenu",protectImageContextMenu,true);
     document.addEventListener("drop",blockUploadDrop,true);
     document.addEventListener("dragover",blockUploadDrop,true);
     syncImages();
@@ -34,6 +40,7 @@ export default function ImageProtection(){
 
     return ()=>{
       document.removeEventListener("dragstart",protectImages,true);
+      document.removeEventListener("contextmenu",protectImageContextMenu,true);
       document.removeEventListener("drop",blockUploadDrop,true);
       document.removeEventListener("dragover",blockUploadDrop,true);
       observer.disconnect();
