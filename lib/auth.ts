@@ -24,9 +24,28 @@ export const authOptions:NextAuthOptions={
     }
   })],
   callbacks:{
-    async jwt({token,user}){if(user) token.role=user.role; return token;},
+    async jwt({token,user}){
+      if(user) token.role=user.role;
+      return token;
+    },
     async session({session,token}){
-      if(session.user){session.user.id=String(token.sub); session.user.role=(token.role??"user") as "user"|"publisher"|"admin";}
+      if(session.user){
+        session.user.id=String(token.sub);
+        session.user.role=(token.role??"user") as "user"|"publisher"|"admin";
+        if(token.sub){
+          try{
+            await connectDB();
+            const current=await User.findById(token.sub).select("role status").lean();
+            if(current?.status==="active"){
+              session.user.role=current.role as "user"|"publisher"|"admin";
+            }else if(current){
+              session.user.role="user";
+            }
+          }catch{
+            // Keep the signed token role as a fallback during a DB outage.
+          }
+        }
+      }
       return session;
     }
   },
