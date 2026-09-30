@@ -16,7 +16,7 @@ export default async function FollowersPage({params}:{params:Promise<{username:s
   const relations=await Follow.find({followingId:user._id}).sort({createdAt:-1}).limit(100).select("followerId").lean();
   const ids=relations.map(row=>row.followerId);
   const users=ids.length
-    ? await User.find({_id:{$in:ids},status:"active"}).select("name username role isVerified avatarKey").lean()
+    ? await User.find({_id:{$in:ids},status:"active",username:{$exists:true,$ne:null}}).select("name username role isVerified avatarKey").lean()
     : [];
   const byId=new Map(users.map(item=>[String(item._id),item]));
   const ordered=ids.map(id=>byId.get(String(id))).filter(Boolean);
