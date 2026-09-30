@@ -1,11 +1,11 @@
 import Link from "next/link";
 import {notFound,redirect} from "next/navigation";
+import Image from "next/image";
 import {getActiveSession} from "@/lib/admin";
 import {connectDB} from "@/lib/mongodb";
 import User from "@/models/User";
 import Wallpaper from "@/models/Wallpaper";
 import {bunnyPublicUrl} from "@/lib/bunny";
-import WallpaperCard from "@/components/wallpaper-card";
 import AdminUserTable from "@/components/admin-user-table";
 import AdminWallpaperActions from "@/components/admin-wallpaper-actions";
 
@@ -66,10 +66,10 @@ export default async function AdminUserProfile({params}:{params:Promise<{id:stri
         ? <div className="card" style={{padding:24}}><p className="muted" style={{margin:0}}>This account has no wallpaper posts.</p></div>
         : <div style={{display:"grid",gap:14}}>
           {wallpapers.map(item=><article className="card" key={String(item._id)} style={{padding:14}}>
-            <div style={{display:"grid",gridTemplateColumns:"minmax(140px,220px) minmax(0,1fr) auto",gap:16,alignItems:"center"}}>
+            <div className="admin-post-row" style={{alignItems:"center"}}>
               <Link href={"/wallpapers/"+item.slug} style={{display:"block"}}>
                 {item.variants?.thumbnail?.key
-                  ? <img src={bunnyPublicUrl(item.variants.thumbnail.key)} alt={item.title} style={{width:"100%",aspectRatio:"16/10",objectFit:"cover",borderRadius:12,display:"block"}}/>
+                  ? <Image src={bunnyPublicUrl(item.variants.thumbnail.key)} alt={item.title} width={440} height={275} sizes="(max-width: 760px) 100vw, 440px" unoptimized style={{width:"100%",aspectRatio:"16/10",objectFit:"cover",borderRadius:12,display:"block"}}/>
                   : <div style={{aspectRatio:"16/10",borderRadius:12,background:"#0d1118"}}/>
                 }
               </Link>
