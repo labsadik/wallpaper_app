@@ -22,7 +22,7 @@ export default async function AccountPage(){
           <h2>{session.user.name||"Account"}</h2>
           {role==="publisher"&&session.user.isVerified?<VerifiedBadge/>:null}
         </div>
-        <p className="muted">@{session.user.username||"user"}</p>
+        <p className="muted">@{session.user.username||"user"} {session.user.username?<><span> · </span><Link href={"/profile/"+session.user.username} style={{textDecoration:"underline"}}>View public profile</Link></>:null}</p>
         <div className="account-badges">
           <span className="badge">{role}</span>
           <span className={session.user.status==="active"?"badge badge-selected":"badge"}>{session.user.status}</span>
