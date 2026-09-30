@@ -2,9 +2,10 @@
 
 import {useState} from "react";
 
-export default function ShareButton({title,url}:{title:string;url:string}){
+export default function ShareButton({title,href}:{title:string;href:string}){
   const [status,setStatus]=useState("");
   async function share(){
+    const url=new URL(href,window.location.origin).toString();
     if(navigator.share){
       await navigator.share({title,url}).catch(()=>{});
       return;
