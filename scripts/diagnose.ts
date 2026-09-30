@@ -29,7 +29,7 @@ async function main(){
 
   const mongoUri=process.env.MONGODB_URI?.trim();
   if(mongoUri){
-    if(/^mongodb(\\+srv)?:\\/\\/.+/i.test(mongoUri)){
+    if(/^mongodb(\+srv)?:\/\/.+/i.test(mongoUri)){
       ok("MongoDB URI","format looks valid");
     }else{
       failed=true;
