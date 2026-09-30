@@ -50,3 +50,5 @@ main().catch(error=>{
   console.error("❌ Load test failed:",error instanceof Error?error.message:error);
   process.exitCode=1;
 });
+
+export {};
