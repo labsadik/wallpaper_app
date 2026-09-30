@@ -1,4 +1,5 @@
 import {notFound} from "next/navigation";
+import Image from "next/image";
 import {connectDB} from "@/lib/mongodb";
 import {getActiveSession} from "@/lib/admin";
 import Wallpaper from "@/models/Wallpaper";
@@ -94,9 +95,15 @@ export default async function ItemPage({params}:{params:Promise<{slug:string}>})
 
   const devices=w.devices?.length?w.devices:["desktop"];
   const variants={
-    desktop:w.variants?.desktop?.key?signedMediaUrl(w.variants.desktop.key):null,
-    tablet:w.variants?.tablet?.key?signedMediaUrl(w.variants.tablet.key):null,
-    mobile:w.variants?.mobile?.key?signedMediaUrl(w.variants.mobile.key):null
+    desktop:w.variants?.desktop?.key
+      ? {url:signedMediaUrl(w.variants.desktop.key),width:Math.max(16,w.variants.desktop.width||1600),height:Math.max(16,w.variants.desktop.height||900)}
+      : null,
+    tablet:w.variants?.tablet?.key
+      ? {url:signedMediaUrl(w.variants.tablet.key),width:Math.max(16,w.variants.tablet.width||1600),height:Math.max(16,w.variants.tablet.height||900)}
+      : null,
+    mobile:w.variants?.mobile?.key
+      ? {url:signedMediaUrl(w.variants.mobile.key),width:Math.max(16,w.variants.mobile.width||900),height:Math.max(16,w.variants.mobile.height||1600)}
+      : null
   };
   const shareUrl=(process.env.NEXT_PUBLIC_APP_URL||"http://localhost:3000")+"/items/"+w.slug;
   const publisherAvatar=publisher?.avatarKey?signedMediaUrl(publisher.avatarKey):null;
@@ -120,7 +127,18 @@ export default async function ItemPage({params}:{params:Promise<{slug:string}>})
 
         <div className="publisher-identity">
           <div className="publisher-avatar">
-            {publisherAvatar?<img className="protected-image" draggable={false} src={publisherAvatar} alt="Publisher avatar"/>:<span>{(publisher?.name||"P").slice(0,1).toUpperCase()}</span>}
+            {publisherAvatar
+              ? <Image
+                  className="protected-image"
+                  draggable={false}
+                  src={publisherAvatar}
+                  alt="Publisher avatar"
+                  width={56}
+                  height={56}
+                  unoptimized
+                  style={{width:"100%",height:"100%",objectFit:"cover"}}
+                />
+              : <span>{(publisher?.name||"P").slice(0,1).toUpperCase()}</span>}
           </div>
           <div>
             <div className="publisher-name-row">
@@ -132,7 +150,13 @@ export default async function ItemPage({params}:{params:Promise<{slug:string}>})
         </div>
 
         <h1>{w.title}</h1>
-        <div className="wallpaper-detail-stats"><span>❤️ {w.likeCount||0} likes</span><span>🔖 {w.saveCount||0} saves</span><span>⬇ {w.downloadCount||0} downloads</span><span>↗ {w.shareCount||0} shares</span><span>{w.source?.width||"—"}×{w.source?.height||"—"} source</span></div>
+        <div className="wallpaper-detail-stats">
+          <span>❤️ {w.likeCount||0} likes</span>
+          <span>🔖 {w.saveCount||0} saves</span>
+          <span>⬇ {w.downloadCount||0} downloads</span>
+          <span>↗ {w.shareCount||0} shares</span>
+          <span>{w.source?.width||"—"}×{w.source?.height||"—"} source</span>
+        </div>
         <PublishedAt value={w.publishedAt?new Date(w.publishedAt).toISOString():null}/>
 
         {canInteract
