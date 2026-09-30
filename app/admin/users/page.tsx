@@ -24,8 +24,8 @@ export default async function AdminUsersPage({searchParams}:{searchParams:Promis
   const filter:Record<string,unknown>={};
   if(role&&["user","publisher","admin"].includes(role))filter.role=role;
   if(status&&["active","suspended","banned"].includes(status))filter.status=status;
-  if(verification==="verified")filter.isVerified=true;
-  if(verification==="unverified")filter.isVerified=false;
+  if(verification==="verified"){filter.role="publisher";filter.isVerified=true;}
+  if(verification==="unverified"){filter.role="publisher";filter.isVerified=false;}
   if(q)filter.$or=[{name:{$regex:q,$options:"i"}},{username:{$regex:q,$options:"i"}},{email:{$regex:q,$options:"i"}}];
 
   const users=await User.find(filter)
