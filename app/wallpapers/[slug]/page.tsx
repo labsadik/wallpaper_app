@@ -4,7 +4,8 @@ import {getActiveSession} from "@/lib/admin";
 import Wallpaper from "@/models/Wallpaper";
 import Like from "@/models/Like";
 import Save from "@/models/Save";
-import {bunnyPublicUrl} from "@/lib/bunny";
+import {signedMediaUrl} from "@/lib/media";
+import {autoPublishDueWallpapers} from "@/lib/wallpaper-publish";
 import WallpaperActions from "@/components/wallpaper-actions";
 import WallpaperViewer from "@/components/wallpaper-viewer";
 import type {Metadata} from "next";
@@ -33,12 +34,13 @@ async function findWallpaperForRequest(slug:string){
 export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{
   const {slug}=await params;
   await connectDB();
+  await autoPublishDueWallpapers();
   const w=await Wallpaper.findOne({slug,status:"published"}).lean();
   if(!w)return {};
   const devices=w.devices?.length?w.devices:["desktop","tablet","mobile"];
   const ogDevice=devices.includes("desktop")?"desktop":devices[0];
   const ogVariant=w.variants?.[ogDevice as "desktop"|"tablet"|"mobile"]?.key;
-  const og=ogVariant?bunnyPublicUrl(ogVariant):undefined;
+  const og=ogVariant?signedMediaUrl(ogVariant,86400):undefined;
   return {
     title:w.title,
     description:"Download "+w.title+" wallpaper in high resolution.",
@@ -49,6 +51,7 @@ export async function generateMetadata({params}:{params:Promise<{slug:string}>})
 export default async function WallpaperPage({params}:{params:Promise<{slug:string}>}){
   const {slug}=await params;
   await connectDB();
+  await autoPublishDueWallpapers();
 
   const {wallpaper:w,privatePreview}=await findWallpaperForRequest(slug);
   if(!w)notFound();
@@ -64,9 +67,9 @@ export default async function WallpaperPage({params}:{params:Promise<{slug:strin
 
   const devices=w.devices?.length?w.devices:["desktop","tablet","mobile"];
   const variants={
-    desktop:w.variants?.desktop?.key?bunnyPublicUrl(w.variants.desktop.key):null,
-    tablet:w.variants?.tablet?.key?bunnyPublicUrl(w.variants.tablet.key):null,
-    mobile:w.variants?.mobile?.key?bunnyPublicUrl(w.variants.mobile.key):null
+    desktop:w.variants?.desktop?.key?signedMediaUrl(w.variants.desktop.key):null,
+    tablet:w.variants?.tablet?.key?signedMediaUrl(w.variants.tablet.key):null,
+    mobile:w.variants?.mobile?.key?signedMediaUrl(w.variants.mobile.key):null
   };
   const shareUrl=(process.env.NEXT_PUBLIC_APP_URL||"http://localhost:3000")+"/wallpapers/"+w.slug;
 
@@ -99,6 +102,7 @@ export default async function WallpaperPage({params}:{params:Promise<{slug:strin
                 shareUrl={shareUrl}
                 title={w.title}
                 devices={devices}
+                authenticated={Boolean(session)}
               />
             </div>
           : <p className="muted" style={{margin:"14px 0 0",fontSize:13}}>Like, save and download actions become available after this wallpaper is published.</p>}
