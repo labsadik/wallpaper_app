@@ -1,8 +1,7 @@
 import {NextResponse} from "next/server";
 import crypto from "node:crypto";
 import mongoose from "mongoose";
-import {getServerSession} from "next-auth";
-import {authOptions} from "@/lib/auth";
+import {getActiveSession} from "@/lib/admin";
 import {connectDB} from "@/lib/mongodb";
 import Wallpaper from "@/models/Wallpaper";
 import Download from "@/models/Download";
@@ -13,7 +12,7 @@ const VALID_DEVICES=["desktop","tablet","mobile"] as const;
 export const runtime="nodejs";
 
 export async function GET(request:Request,{params}:{params:Promise<{id:string}>}){
-  const session=await getServerSession(authOptions);
+  const session=await getActiveSession();
   const {id}=await params;
   if(!mongoose.isValidObjectId(id)) return NextResponse.json({error:"Invalid wallpaper id"},{status:400});
 
