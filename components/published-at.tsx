@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect,useMemo,useState} from "react";
+import {useMemo} from "react";
 
 export default function PublishedAt({value}:{value?:string|Date|null}){
   const iso=useMemo(()=>{
@@ -9,21 +9,14 @@ export default function PublishedAt({value}:{value?:string|Date|null}){
     return Number.isNaN(date.getTime())?"":date.toISOString();
   },[value]);
 
-  const fallback=useMemo(()=>{
+  const label=useMemo(()=>{
     if(!iso)return "Publication time unavailable";
-    return new Intl.DateTimeFormat("en",{dateStyle:"medium",timeStyle:"short",timeZone:"UTC"}).format(new Date(iso))+" UTC";
-  },[iso]);
-
-  const [label,setLabel]=useState(fallback);
-
-  useEffect(()=>{
-    if(!iso)return;
-    setLabel(new Intl.DateTimeFormat(undefined,{dateStyle:"medium",timeStyle:"short"}).format(new Date(iso)));
+    return new Intl.DateTimeFormat(undefined,{dateStyle:"medium",timeStyle:"short"}).format(new Date(iso));
   },[iso]);
 
   if(!iso)return <span className="muted">Publication time unavailable</span>;
 
-  return <time dateTime={iso} title={new Date(iso).toISOString()} className="published-at">
+  return <time dateTime={iso} title={new Date(iso).toISOString()} className="published-at" suppressHydrationWarning>
     Published · {label}
   </time>;
 }
