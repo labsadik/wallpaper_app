@@ -97,7 +97,7 @@ export default async function WallpapersPage({searchParams}:{searchParams:Promis
             category={item.category}
             likes={item.likeCount}
             downloads={item.downloadCount}
-            imageUrl={item.variants?.thumbnail?.key?bunnyPublicUrl(item.variants.thumbnail.key):undefined}
+            imageUrl={item.variants?.thumbnail?.key?signedMediaUrl(item.variants.thumbnail.key):undefined}
             devices={item.devices||["desktop","tablet","mobile"]}
           />)}
         </div>}
