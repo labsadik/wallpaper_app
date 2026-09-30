@@ -72,6 +72,7 @@ export default async function AdminUsersPage({searchParams}:{searchParams:Promis
       <AdminUserTable users={users.map(user=>({
         _id:String(user._id),
         name:user.name,
+        username:user.username||null,
         email:user.email,
         role:user.role as "user"|"publisher"|"admin",
         status:user.status as "active"|"suspended"|"banned",
