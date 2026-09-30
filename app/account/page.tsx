@@ -1,11 +1,10 @@
 import Link from "next/link";
-import {getServerSession} from "next-auth";
-import {authOptions} from "@/lib/auth";
+import {getActiveSession} from "@/lib/admin";
 import {redirect} from "next/navigation";
 import PageShell from "@/components/page-shell";
 
 export default async function AccountPage(){
-  const session=await getServerSession(authOptions); if(!session) redirect("/login");
+  const session=await getActiveSession(); if(!session) redirect("/login");
   const role=session.user.role;
   return <PageShell eyebrow="Account" title={session.user.name||"Your account"} description={session.user.email||undefined}>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))",gap:16}}>
