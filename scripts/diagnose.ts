@@ -27,15 +27,13 @@ async function main(){
   if(process.env.NEXTAUTH_SECRET && process.env.NEXTAUTH_SECRET.length>=32) ok("NextAuth secret","length is sufficient");
   else { failed=true; fail("NextAuth secret","must be at least 32 characters"); }
 
-  const mongoUri=process.env.MONGODB_URI;
+  const mongoUri=process.env.MONGODB_URI?.trim();
   if(mongoUri){
-    try{
-      const parsed=new URL(mongoUri);
-      if(parsed.protocol!=="mongodb:"&&parsed.protocol!=="mongodb+srv:") throw new Error("unsupported URI scheme");
-      ok("MongoDB URI","scheme "+parsed.protocol);
-    }catch(error){
+    if(/^mongodb(\\+srv)?:\\/\\/.+/i.test(mongoUri)){
+      ok("MongoDB URI","format looks valid");
+    }else{
       failed=true;
-      fail("MongoDB URI",error instanceof Error?error.message:"invalid URI");
+      fail("MongoDB URI","must start with mongodb:// or mongodb+srv://");
     }
   }
 
