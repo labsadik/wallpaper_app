@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export default function GlobalError({reset}:{error:Error&{digest?:string};reset:()=>void}){
   return <html lang="en">
     <body>
@@ -10,7 +12,7 @@ export default function GlobalError({reset}:{error:Error&{digest?:string};reset:
           <p className="muted">Please retry the page. If the issue continues, try again later.</p>
           <div className="app-error-actions">
             <button className="btn btn-primary" type="button" onClick={()=>reset()}>Try again</button>
-            <a className="btn" href="/">Go home</a>
+            <Link className="btn" href="/">Go home</Link>
           </div>
         </section>
       </main>
