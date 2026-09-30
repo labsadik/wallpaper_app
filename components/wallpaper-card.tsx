@@ -31,7 +31,7 @@ export default function WallpaperCard({
       <Link href={"/wallpapers/"+slug}><h3 style={{margin:"0 0 9px",fontSize:18}}>{title}</h3></Link>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap"}}>
         <div className="muted" style={{display:"flex",gap:14,fontSize:13}}><span>♥ {likes}</span><span>↓ {downloads}</span></div>
-        <ShareButton title={title} url={(typeof window!=="undefined"?window.location.origin:"")+"/wallpapers/"+slug}/>
+        <ShareButton title={title} href={"/wallpapers/"+slug}/>
       </div>
     </div>
   </article>;
