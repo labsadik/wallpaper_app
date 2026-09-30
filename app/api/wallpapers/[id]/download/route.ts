@@ -22,7 +22,8 @@ export async function GET(request:Request,{params}:{params:Promise<{id:string}>}
   if(!isDevice(deviceParam))return NextResponse.json({error:"Invalid device."},{status:400});
 
   const session=await getActiveSession();
-  if(session?.user?.status&&session.user.status!=="active"){
+  if(!session?.user?.id)return NextResponse.json({error:"Login required to download wallpapers."},{status:401});
+  if(session.user.status!=="active"){
     return NextResponse.json({error:"Account is not active."},{status:403});
   }
 
