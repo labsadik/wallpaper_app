@@ -27,7 +27,7 @@ export default function PublisherUploadPage(){
   const previewUrlRef=useRef("");
   const [devices,setDevices]=useState<DeviceId[]>(["desktop","tablet","mobile"]);
   const [status,setStatus]=useState("");
-  const [result,setResult]=useState<{id:string;category:string;devices:DeviceId[]}|null>(null);
+  const [result,setResult]=useState<{id:string;slug:string;category:string;devices:DeviceId[]}|null>(null);
   const [progress,setProgress]=useState(0);
   const [progressLabel,setProgressLabel]=useState("");
 
@@ -86,7 +86,7 @@ export default function PublisherUploadPage(){
     formData.set("file",file);
 
     try{
-      const data=await new Promise<{wallpaperId:string;category:string;devices:string[]}|{error:string}>((resolve,reject)=>{
+      const data=await new Promise<{wallpaperId:string;slug:string;category:string;devices:string[]}>((resolve,reject)=>{
         const xhr=new XMLHttpRequest();
         xhr.open("POST","/api/publisher/upload",true);
 
@@ -106,13 +106,14 @@ export default function PublisherUploadPage(){
         };
         xhr.onload=()=>{
           if(processingTimer)clearInterval(processingTimer);
-          let payload:{wallpaperId?:string;category?:string;devices?:string[];error?:string}={};
+          let payload:{wallpaperId?:string;slug?:string;category?:string;devices?:string[];error?:string}={};
           try{payload=JSON.parse(xhr.responseText||"{}");}catch{}
-          if(xhr.status>=200&&xhr.status<300&&payload.wallpaperId){
+          if(xhr.status>=200&&xhr.status<300&&payload.wallpaperId&&payload.slug){
             setProgress(100);
             setProgressLabel("Complete");
             resolve({
               wallpaperId:payload.wallpaperId,
+              slug:payload.slug,
               category:payload.category||category,
               devices:Array.isArray(payload.devices)?payload.devices:[...devices]
             });
@@ -125,12 +126,9 @@ export default function PublisherUploadPage(){
         xhr.send(formData);
       });
 
-      if("error" in data){
-        setStatus(data.error);
-        return;
-      }
       setResult({
         id:String(data.wallpaperId),
+        slug:String(data.slug),
         category:String(data.category||category),
         devices:data.devices as DeviceId[]
       });
@@ -150,7 +148,7 @@ export default function PublisherUploadPage(){
   return <PageShell
     eyebrow="Publisher Studio"
     title="Upload wallpaper"
-    description="Preview your image, choose a category and select the target devices. Your choices are saved with the wallpaper."
+    description="Preview your image, choose a category and select the target devices. New uploads are saved as Pending review."
   >
     <form onSubmit={submit} className="upload-layout">
       <section className="card" style={{padding:24,display:"grid",gap:20}}>
@@ -228,7 +226,7 @@ export default function PublisherUploadPage(){
 
         <div className="card" style={{padding:16,display:"grid",gap:9}}>
           <strong>Automatic checks</strong>
-          <span className="muted">✓ Format and integrity · ✓ Any resolution accepted · ✓ Quality warning for smaller sources · ✓ Duplicate detection · ✓ Optimization · ✓ Selected device targets saved</span>
+          <span className="muted">✓ Format and integrity · ✓ Any resolution accepted · ✓ Quality warning for smaller sources · ✓ Duplicate detection · ✓ Optimization · ✓ Selected device targets saved · ✓ Pending review workflow</span>
         </div>
 
         {progress>0?<div className="card" style={{padding:13,display:"grid",gap:7}}>
@@ -247,13 +245,17 @@ export default function PublisherUploadPage(){
         </div>
 
         {result?<div className="card" style={{padding:16,display:"grid",gap:10,borderColor:"#3a4352"}}>
-          <strong>Saved upload</strong>
+          <strong>Saved upload · Pending review</strong>
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
             <span className="badge">{result.category}</span>
+            <span className="badge">pending_review</span>
             {DEVICES.filter(device=>result.devices.includes(device.id)).map(device=><span className="badge" key={device.id}>{device.label}</span>)}
           </div>
           <span className="muted" style={{fontSize:13}}>Wallpaper ID: {result.id}</span>
-          <Link className="btn" href="/publisher">Back to publisher studio</Link>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            <Link className="btn" href={"/wallpapers/"+result.slug}>Open private preview</Link>
+            <Link className="btn" href="/publisher">Back to publisher studio</Link>
+          </div>
         </div>:null}
       </section>
 
