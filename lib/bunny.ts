@@ -6,9 +6,20 @@ function required(name:string){
   return value;
 }
 
+function storageZone(){
+  const zone=required("BUNNY_STORAGE_ZONE");
+  if(/^\d+$/.test(zone)){
+    throw new Error("BUNNY_STORAGE_ZONE must be the Bunny Storage Zone name, not its numeric ID");
+  }
+  if(!/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i.test(zone)){
+    throw new Error("BUNNY_STORAGE_ZONE contains invalid characters; use the Storage Zone name from Bunny FTP & API Access");
+  }
+  return zone;
+}
+
 function storageObjectUrl(path:string){
   const hostname=required("BUNNY_STORAGE_HOSTNAME").replace(/^https?:\/\//,"").replace(/\/$/,"");
-  const zone=encodeURIComponent(required("BUNNY_STORAGE_ZONE"));
+  const zone=encodeURIComponent(storageZone());
   const cleanPath=path.replace(/^\/+/,"").split("/").map(encodeURIComponent).join("/");
   return "https://"+hostname+"/"+zone+"/"+cleanPath;
 }
