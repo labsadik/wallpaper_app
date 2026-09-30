@@ -3,7 +3,8 @@ import PageShell from "@/components/page-shell";
 import WallpaperCard from "@/components/wallpaper-card";
 import {connectDB} from "@/lib/mongodb";
 import Wallpaper from "@/models/Wallpaper";
-import {bunnyPublicUrl} from "@/lib/bunny";
+import {signedMediaUrl} from "@/lib/media";
+import {autoPublishDueWallpapers} from "@/lib/wallpaper-publish";
 
 export const dynamic="force-dynamic";
 
@@ -28,6 +29,7 @@ export default async function WallpapersPage({searchParams}:{searchParams:Promis
   const sort=SORTS.some(([value])=>value===params.sort)?params.sort||"newest":"newest";
 
   await connectDB();
+  await autoPublishDueWallpapers();
 
   const filter:Record<string,unknown>={status:"published"};
   if(category&&category!=="All")filter.category=category;
