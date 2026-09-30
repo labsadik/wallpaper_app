@@ -9,24 +9,26 @@ const allowed=new Set(["jpeg","png","webp","avif"]);
 
 export async function analyzeAndOptimize(buffer:Buffer):Promise<{
   analysis:ImageAnalysis;
-  variants:{desktop:Buffer;tablet:Buffer;mobile:Buffer;thumbnail:Buffer};
+  variants:{desktop:Buffer;tablet:Buffer;mobile:Buffer};
 }>{
   const meta=await sharp(buffer,{failOn:"error"}).metadata();
   const width=meta.width??0;
   const height=meta.height??0;
   const format=meta.format??"";
-  if(!allowed.has(format)) throw new Error("Unsupported image format");
-  // Accept supported raster images at any resolution. Lower-resolution sources are
-  // still stored and processed, but are marked as a quality warning instead of
-  // blocking the publisher upload.
+  if(!allowed.has(format))throw new Error("Unsupported image format");
+
   const qualityStatus=width>=1920&&height>=1080?"pass":"warning";
-  const desktop=await sharp(buffer).rotate().resize({width:2560,height:2560,fit:"inside",withoutEnlargement:true}).webp({quality:Number(process.env.IMAGE_QUALITY_WEBP||90),smartSubsample:true}).toBuffer();
-  const tablet=await sharp(buffer).rotate().resize({width:2048,height:2048,fit:"inside",withoutEnlargement:true}).webp({quality:Number(process.env.IMAGE_QUALITY_WEBP||90),smartSubsample:true}).toBuffer();
-  const mobile=await sharp(buffer).rotate().resize({width:1600,height:1600,fit:"inside",withoutEnlargement:true}).webp({quality:Number(process.env.IMAGE_QUALITY_WEBP||90),smartSubsample:true}).toBuffer();
-  const thumbnail=await sharp(buffer).rotate().resize({width:640,height:640,fit:"inside",withoutEnlargement:true}).webp({quality:88}).toBuffer();
+  const quality=Number(process.env.IMAGE_QUALITY_WEBP||90);
+
+  const [desktop,tablet,mobile]=await Promise.all([
+    sharp(buffer).rotate().resize({width:2560,height:2560,fit:"inside",withoutEnlargement:true}).webp({quality,smartSubsample:true}).toBuffer(),
+    sharp(buffer).rotate().resize({width:2048,height:2048,fit:"inside",withoutEnlargement:true}).webp({quality,smartSubsample:true}).toBuffer(),
+    sharp(buffer).rotate().resize({width:1600,height:1600,fit:"inside",withoutEnlargement:true}).webp({quality,smartSubsample:true}).toBuffer()
+  ]);
+
   return {
     analysis:{width,height,format,sizeBytes:buffer.length,sha256:crypto.createHash("sha256").update(buffer).digest("hex"),qualityStatus},
-    variants:{desktop,tablet,mobile,thumbnail}
+    variants:{desktop,tablet,mobile}
   };
 }
 
