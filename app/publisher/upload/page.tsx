@@ -26,7 +26,7 @@ export default function PublisherUploadPage(){
   const [file,setFile]=useState<File|null>(null);
   const [previewUrl,setPreviewUrl]=useState("");
   const previewUrlRef=useRef("");
-  const [devices,setDevices]=useState<DeviceId[]>(["desktop","tablet","mobile"]);
+  const [devices,setDevices]=useState<DeviceId[]>(["desktop"]);
   const [status,setStatus]=useState("");
   const [result,setResult]=useState<{id:string;slug:string;category:string;devices:DeviceId[];publishAt:string|null}|null>(null);
   const [progress,setProgress]=useState(0);
@@ -56,12 +56,7 @@ export default function PublisherUploadPage(){
 
   function toggleDevice(device:DeviceId){
     setResult(null);
-    setDevices(current=>{
-      if(current.includes(device)){
-        return current.length===1?current:current.filter(item=>item!==device);
-      }
-      return [...current,device];
-    });
+    setDevices([device]);
   }
 
   async function submit(event:FormEvent){
@@ -70,8 +65,8 @@ export default function PublisherUploadPage(){
       setStatus("Choose an image first.");
       return;
     }
-    if(devices.length===0){
-      setStatus("Select at least one target device.");
+    if(devices.length!==1){
+      setStatus("Select exactly one target device.");
       return;
     }
 
@@ -194,7 +189,7 @@ export default function PublisherUploadPage(){
         <div style={{display:"grid",gap:12}}>
           <div>
             <strong style={{fontSize:16}}>Target devices</strong>
-            <p className="muted" style={{fontSize:13,margin:"4px 0 0"}}>Select where this wallpaper should be available.</p>
+            <p className="muted" style={{fontSize:13,margin:"4px 0 0"}}>Choose exactly one device. You can publish PC, Tablet or Mobile as separate posts.</p>
           </div>
           <div className="device-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:10}}>
             {DEVICES.map(device=>{
@@ -267,9 +262,9 @@ export default function PublisherUploadPage(){
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
             <div>
               <strong>Device preview</strong>
-              <p className="muted" style={{margin:"4px 0 0",fontSize:13}}>Three previews make the selected targets clear before upload.</p>
+              <p className="muted" style={{margin:"4px 0 0",fontSize:13}}>One device is allowed per upload. Create separate posts for other devices.</p>
             </div>
-            <span className="badge">{devices.length}/3</span>
+            <span className="badge">1 device / upload</span>
           </div>
           <div style={{display:"grid",gap:12,marginTop:16}}>
             {DEVICES.map(device=>{
