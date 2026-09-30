@@ -4,6 +4,7 @@ import {connectDB} from "@/lib/mongodb";
 import Wallpaper from "@/models/Wallpaper";
 import {signedMediaUrl} from "@/lib/media";
 import {autoPublishDueWallpapers} from "@/lib/wallpaper-publish";
+import PublishedAt from "@/components/published-at";
 
 export const dynamic="force-dynamic";
 
@@ -11,9 +12,9 @@ export default async function HomePage(){
   await connectDB();
   await autoPublishDueWallpapers();
   const items=await Wallpaper.find({status:"published"})
-    .sort({createdAt:-1})
+    .sort({publishedAt:-1,createdAt:-1})
     .limit(8)
-    .select("slug title category devices variants.thumbnail.key")
+    .select("slug title category devices variants.thumbnail.key publishedAt")
     .lean();
 
   return <div className="landing-shell">
@@ -25,10 +26,10 @@ export default async function HomePage(){
           <p>Explore polished wallpapers, share them instantly, and publish your own with automatic processing and 20-second publishing.</p>
           <div className="landing-actions">
             <Link className="landing-primary" href="/wallpapers">Explore wallpapers</Link>
-            <Link className="landing-secondary" href="/register">Create publisher account</Link>
+            <Link className="landing-secondary" href="/register">Create account</Link>
           </div>
           <div className="landing-stat-row">
-            <span>8 latest published items</span>
+            <span>Latest published items</span>
             <span>PC · Tablet · Mobile</span>
             <span>No login required to browse or share</span>
           </div>
@@ -55,6 +56,8 @@ export default async function HomePage(){
                 <div className="landing-image">
                   {item.variants?.thumbnail?.key
                     ? <Image
+                        className="protected-image"
+                        draggable={false}
                         src={signedMediaUrl(item.variants.thumbnail.key)}
                         alt={item.title}
                         fill
@@ -70,6 +73,7 @@ export default async function HomePage(){
                     {(item.devices||[]).map((device:string)=><span className="landing-badge" key={device}>{device==="desktop"?"PC":device==="tablet"?"Tablet":"Mobile"}</span>)}
                   </div>
                   <h3>{item.title}</h3>
+                  <PublishedAt value={item.publishedAt?new Date(item.publishedAt).toISOString():null}/>
                   <span>Open & share →</span>
                 </div>
               </Link>)}
