@@ -66,39 +66,64 @@ async function main(){
   const cdnHost=(process.env.BUNNY_CDN_HOSTNAME||"").replace(/^https?:\/\//,"").replace(/\/$/,"");
 
   if(storageHost&&zone&&accessKey&&cdnHost){
+    const rootUrl="https://"+storageHost+"/"+encodeURIComponent(zone)+"/";
     const path="diagnostics/health-"+Date.now()+"-"+crypto.randomBytes(4).toString("hex")+".txt";
-    const objectUrl="https://"+storageHost+"/"+encodeURIComponent(zone)+"/"+path.split("/").map(encodeURIComponent).join("/");
+    const objectUrl=rootUrl+path.split("/").map(encodeURIComponent).join("/");
     const cdnUrl="https://"+cdnHost+"/"+path.split("/").map(encodeURIComponent).join("/");
     const body=Buffer.from("wallpaper-saas-diagnostic");
 
     try{
-      const checksum=crypto.createHash("sha256").update(body).digest("hex").toUpperCase();
-      const upload=await fetch(objectUrl,{
-        method:"PUT",
-        headers:{AccessKey:accessKey,"Content-Type":"text/plain",Checksum:checksum},
-        body:body as unknown as BodyInit
+      const authCheck=await fetch(rootUrl,{
+        method:"GET",
+        headers:{AccessKey:accessKey},
+        cache:"no-store"
       });
-      if(!upload.ok){
-        failed=true;
-        const detail=(await upload.text()).slice(0,300).replace(/\s+/g," ").trim();
-        fail("Bunny Storage upload",detail?String(upload.status)+" — "+detail:String(upload.status));
-      }else{
-        ok("Bunny Storage upload");
-        let delivered=false;
-        for(let attempt=1;attempt<=3;attempt++){
-          const cdn=await fetch(cdnUrl,{cache:"no-store"});
-          if(cdn.ok){
-            delivered=true;
-            break;
-          }
-          await new Promise(resolve=>setTimeout(resolve,1000));
-        }
-        if(delivered) ok("Bunny CDN delivery");
-        else { failed=true; fail("Bunny CDN delivery","uploaded object was not reachable through the configured CDN hostname"); }
 
-        const del=await fetch(objectUrl,{method:"DELETE",headers:{AccessKey:accessKey}});
-        if(del.ok||del.status===404) ok("Bunny Storage cleanup");
-        else { failed=true; fail("Bunny Storage cleanup",String(del.status)); }
+      if(!authCheck.ok){
+        failed=true;
+        const detail=(await authCheck.text()).slice(0,300).replace(/\s+/g," ").trim();
+        fail(
+          "Bunny Storage authentication",
+          detail
+            ? String(authCheck.status)+" — "+detail+" (use the Storage Zone read/write Password from FTP & API Access)"
+            : String(authCheck.status)+" (use the Storage Zone read/write Password from FTP & API Access)"
+        );
+      }else{
+        ok("Bunny Storage authentication","credentials accepted");
+
+        const checksum=crypto.createHash("sha256").update(body).digest("hex").toUpperCase();
+        const upload=await fetch(objectUrl,{
+          method:"PUT",
+          headers:{AccessKey:accessKey,"Content-Type":"text/plain",Checksum:checksum},
+          body:body as unknown as BodyInit
+        });
+
+        if(!upload.ok){
+          failed=true;
+          const detail=(await upload.text()).slice(0,300).replace(/\s+/g," ").trim();
+          if(upload.status===401){
+            fail("Bunny Storage upload","401 — credentials authenticate for reading but are not authorized for upload; use the read/write Storage Zone Password, not the read-only password");
+          }else{
+            fail("Bunny Storage upload",detail?String(upload.status)+" — "+detail:String(upload.status));
+          }
+        }else{
+          ok("Bunny Storage upload");
+          let delivered=false;
+          for(let attempt=1;attempt<=3;attempt++){
+            const cdn=await fetch(cdnUrl,{cache:"no-store"});
+            if(cdn.ok){
+              delivered=true;
+              break;
+            }
+            await new Promise(resolve=>setTimeout(resolve,1000));
+          }
+          if(delivered) ok("Bunny CDN delivery");
+          else { failed=true; fail("Bunny CDN delivery","uploaded object was not reachable through the configured CDN hostname"); }
+
+          const del=await fetch(objectUrl,{method:"DELETE",headers:{AccessKey:accessKey}});
+          if(del.ok||del.status===404) ok("Bunny Storage cleanup");
+          else { failed=true; fail("Bunny Storage cleanup",String(del.status)); }
+        }
       }
     }catch(error){
       failed=true;
