@@ -28,8 +28,6 @@ export async function GET(request:Request,{params}:{params:Promise<{path:string[
       {"variants.desktop.key":storagePath},
       {"variants.tablet.key":storagePath},
       {"variants.mobile.key":storagePath},
-      {"variants.thumbnail.key":storagePath},
-      {"source.sha256":storagePath}
     ]
   }).select("publisherId status").lean();
 
