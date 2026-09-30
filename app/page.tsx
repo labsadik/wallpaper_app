@@ -1,23 +1,80 @@
 import Link from "next/link";
+import Image from "next/image";
+import {connectDB} from "@/lib/mongodb";
+import Wallpaper from "@/models/Wallpaper";
+import {signedMediaUrl} from "@/lib/media";
+import {autoPublishDueWallpapers} from "@/lib/wallpaper-publish";
 
-const categories=[["Nature","Misty Mountains"],["Urban","Midnight City"],["Space","Deep Space"],["Minimal","Minimal Lines"]];
+export const dynamic="force-dynamic";
 
-export default function HomePage(){
-  return <main>
-    <section className="container" style={{padding:"72px 0 40px"}}>
-      <p className="muted">Wallpaper SaaS</p>
-      <h1 style={{fontSize:"clamp(42px,7vw,76px)",lineHeight:1.02,maxWidth:900,margin:"12px 0 20px"}}>Discover beautiful wallpapers. Publish once, process automatically.</h1>
-      <p className="muted" style={{fontSize:18,maxWidth:720}}>Users can like, save, share and download. Publishers upload once; the platform handles validation, quality checks, optimization and device variants.</p>
-      <div style={{display:"flex",gap:12,marginTop:28}}>
-        <Link className="btn btn-primary" href="/wallpapers">Explore wallpapers</Link>
-        <Link className="btn" href="/register">Create account</Link>
-      </div>
-    </section>
-    <section className="container" style={{padding:"20px 0 80px"}}>
-      <h2 style={{fontSize:28,marginBottom:18}}>Featured categories</h2>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:16}}>
-        {categories.map(([category,title])=><Link key={title} href="/wallpapers" className="card" style={{padding:22}}><p className="muted">{category}</p><h3 style={{fontSize:22,margin:"10px 0 0"}}>{title}</h3></Link>)}
-      </div>
-    </section>
-  </main>;
+export default async function HomePage(){
+  await connectDB();
+  await autoPublishDueWallpapers();
+  const items=await Wallpaper.find({status:"published"})
+    .sort({createdAt:-1})
+    .limit(8)
+    .select("slug title category devices variants.thumbnail.key")
+    .lean();
+
+  return <div className="landing-shell">
+    <main>
+      <section className="landing-hero">
+        <div className="container">
+          <span className="landing-kicker">Wallpaper SaaS</span>
+          <h1>High-quality wallpapers, ready for every screen.</h1>
+          <p>Explore polished wallpapers, share them instantly, and publish your own with automatic processing and 20-second publishing.</p>
+          <div className="landing-actions">
+            <Link className="landing-primary" href="/wallpapers">Explore wallpapers</Link>
+            <Link className="landing-secondary" href="/register">Create publisher account</Link>
+          </div>
+          <div className="landing-stat-row">
+            <span>8 latest published items</span>
+            <span>PC · Tablet · Mobile</span>
+            <span>No login required to browse or share</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="container landing-items">
+        <div className="landing-section-head">
+          <div>
+            <span className="landing-kicker">Latest collection</span>
+            <h2>Published wallpapers</h2>
+            <p>Every item is live from the database and can be opened, viewed and shared.</p>
+          </div>
+          <Link className="landing-secondary" href="/wallpapers">View all</Link>
+        </div>
+
+        {items.length===0
+          ? <div className="landing-empty">
+              <strong>No published wallpapers yet.</strong>
+              <span>Upload a wallpaper from Publisher Studio and it will publish automatically 20 seconds after processing.</span>
+            </div>
+          : <div className="landing-grid">
+              {items.map(item=><Link key={String(item._id)} href={"/wallpapers/"+item.slug} className="landing-wallpaper-card">
+                <div className="landing-image">
+                  {item.variants?.thumbnail?.key
+                    ? <Image
+                        src={signedMediaUrl(item.variants.thumbnail.key)}
+                        alt={item.title}
+                        fill
+                        sizes="(max-width: 760px) 100vw, (max-width: 1100px) 50vw, 25vw"
+                        unoptimized
+                        style={{objectFit:"cover"}}
+                      />
+                    : null}
+                </div>
+                <div className="landing-card-body">
+                  <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
+                    <span className="landing-badge">{item.category}</span>
+                    {(item.devices||[]).map((device:string)=><span className="landing-badge" key={device}>{device==="desktop"?"PC":device==="tablet"?"Tablet":"Mobile"}</span>)}
+                  </div>
+                  <h3>{item.title}</h3>
+                  <span>Open & share →</span>
+                </div>
+              </Link>)}
+            </div>}
+      </section>
+    </main>
+  </div>;
 }
