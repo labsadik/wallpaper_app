@@ -1,9 +1,15 @@
 import {getServerSession} from "next-auth";
 import {authOptions} from "@/lib/auth";
 
-export async function requireAdmin(){
+export async function getActiveSession(){
   const session=await getServerSession(authOptions);
-  if(!session?.user?.id) return {session:null as const,unauthorized:true as const};
+  if(!session?.user?.id || session.user.status!=="active") return null;
+  return session;
+}
+
+export async function requireAdmin(){
+  const session=await getActiveSession();
+  if(!session) return {session:null as const,unauthorized:true as const};
   if(session.user.role!=="admin") return {session,forbidden:true as const};
   return {session,forbidden:false as const,unauthorized:false as const};
 }
