@@ -11,7 +11,7 @@ function signature(path:string,expires:number){
 }
 
 export function signedMediaUrl(path:string,expiresInSeconds=300){
-  const cleanPath=path.replace(/^\/+,"").split("/").filter(Boolean);
+  const cleanPath=path.replace(/^\/+/, "").split("/").filter(Boolean);
   if(!cleanPath.length)throw new Error("Media path is required");
   const expires=Math.floor(Date.now()/1000)+expiresInSeconds;
   const encodedPath=cleanPath.map(encodeURIComponent).join("/");
