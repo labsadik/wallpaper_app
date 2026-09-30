@@ -8,5 +8,5 @@ export function Field({label,children,help}:{label:string;children:ReactNode;hel
   return <label style={{display:"grid",gap:8}}><span style={{fontSize:13,fontWeight:700}}>{label}</span>{children}{help?<span className="muted" style={{fontSize:12}}>{help}</span>:null}</label>;
 }
 export function Input(props:InputHTMLAttributes<HTMLInputElement>){
-  return <input {...props} style={{padding:"12px 13px",borderRadius:12,border:"1px solid var(--line)",background:"#0d1118",color:"white",outline:"none",width:"100%",...(props.style||{})}}/>;
+  return <input {...props} style={{padding:"12px 13px",borderRadius:12,border:"1px solid var(--line)",background:"var(--input)",color:"var(--text)",outline:"none",width:"100%",...(props.style||{})}}/>;
 }
