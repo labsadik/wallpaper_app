@@ -134,10 +134,13 @@ export default function WallpaperActions({
 
   return <div style={{display:"grid",gap:12}}>
     <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
-      <button className="btn" onClick={()=>toggle("like")} disabled={busy}>{liked?"❤️":"♡"} {likes}</button>
-      <button className="btn" onClick={()=>toggle("save")} disabled={busy}>{saved?"🔖 Saved":"🔖 Save"}</button>
+      {authenticated?<>
+        <button className="btn" onClick={()=>toggle("like")} disabled={busy}>{liked?"❤️":"♡"} {likes}</button>
+        <button className="btn" onClick={()=>toggle("save")} disabled={busy}>{saved?"🔖 Saved":"🔖 Save"}</button>
+      </>:null}
       <button className="btn" onClick={share}>↗ Share</button>
 
+      {authenticated?<>
       <select
         value={downloadDevice}
         onChange={event=>setDownloadDevice(event.target.value)}
@@ -151,7 +154,10 @@ export default function WallpaperActions({
       <button className="btn btn-primary" onClick={download} disabled={downloadBusy}>
         {downloadBusy?"Downloading…":"⬇ Download"}
       </button>
+      </>:null}
     </div>
+
+    {!authenticated?<span className="muted" style={{fontSize:12}}>Share is available without login. Like, save and download require an active account.</span>:null}
 
     {downloadBusy||downloadStatus?<div className="card" style={{padding:12,display:"grid",gap:7}}>
       <div style={{display:"flex",justifyContent:"space-between",gap:12,fontSize:13}}>
