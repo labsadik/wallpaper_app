@@ -6,7 +6,7 @@ import {useState} from "react";
 const LABELS:Record<string,string>={desktop:"PC",tablet:"Tablet",mobile:"Mobile"};
 
 export default function WallpaperViewer({title,devices,variants}:{title:string;devices:string[];variants:Record<string,string|null>}){
-  const available=devices.length?devices:["desktop","tablet","mobile"];
+  const available=devices.length?devices:["desktop"];
   const [device,setDevice]=useState(available[0]);
   const image=variants[device]||variants[available[0]]||null;
   return <section className="wallpaper-viewer" style={{display:"grid",gap:12}}>
