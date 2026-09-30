@@ -1,6 +1,7 @@
 "use client";
 
 import {useState} from "react";
+import Link from "next/link";
 import {useRouter} from "next/navigation";
 
 type AdminUser={
@@ -62,7 +63,7 @@ export default function AdminUserTable({users:initialUsers,currentAdminId}:{user
       return <article className="card" key={id} style={{padding:18}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:16,flexWrap:"wrap"}}>
           <div style={{minWidth:0}}>
-            <h2 style={{fontSize:19,margin:0,overflowWrap:"anywhere"}}>{user.name}</h2>
+            <h2 style={{fontSize:19,margin:0,overflowWrap:"anywhere"}}><Link href={"/admin/users/"+id} style={{textDecoration:"underline",textDecorationColor:"var(--line)"}}>{user.name}</Link></h2>
             <p className="muted" style={{margin:"4px 0 0",overflowWrap:"anywhere"}}>{user.email}</p>
             <div style={{display:"flex",gap:7,flexWrap:"wrap",marginTop:10}}>
               <span className="badge">{user.role}</span>
