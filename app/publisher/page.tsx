@@ -70,7 +70,7 @@ export default async function PublisherPage(){
                 likes={item.likeCount}
                 downloads={item.downloadCount}
                 imageUrl={item.variants?.[item.devices?.[0]||"desktop"]?.key?signedMediaUrl(item.variants?.[item.devices?.[0]||"desktop"]?.key):undefined}
-                devices={item.devices||["desktop","tablet","mobile"]}
+                devices={item.devices||["desktop"]}
                 publishedAt={item.publishedAt?new Date(item.publishedAt).toISOString():null}
               />
               <div style={{display:"flex",gap:7,flexWrap:"wrap",padding:"0 2px",alignItems:"center"}}>
