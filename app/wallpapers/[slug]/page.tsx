@@ -11,6 +11,7 @@ import WallpaperActions from "@/components/wallpaper-actions";
 import WallpaperViewer from "@/components/wallpaper-viewer";
 import PublishedAt from "@/components/published-at";
 import VerifiedBadge from "@/components/verified-badge";
+import Link from "next/link";
 import type {Metadata} from "next";
 
 const DEVICE_LABELS:Record<string,string>={desktop:"PC",tablet:"Tablet",mobile:"Mobile"};
@@ -123,7 +124,7 @@ export default async function WallpaperPage({params}:{params:Promise<{slug:strin
           </div>
           <div>
             <div className="publisher-name-row">
-              <strong>{publisher?.name||"Publisher"}</strong>
+              <Link href={publisher?.username?"/profile/"+publisher.username:"#"}><strong>{publisher?.name||"Publisher"}</strong></Link>
               {publisher?.role==="publisher"&&publisher?.isVerified?<VerifiedBadge/>:null}
             </div>
             <span className="muted">@{publisher?.username||"publisher"}</span>
