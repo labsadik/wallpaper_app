@@ -13,6 +13,23 @@ const DEVICE_LABELS:Record<string,string>={desktop:"PC",tablet:"Tablet",mobile:"
 
 export const dynamic="force-dynamic";
 
+async function findWallpaperForRequest(slug:string){
+  const published=await Wallpaper.findOne({slug,status:"published"}).lean();
+  if(published)return {wallpaper:published,privatePreview:false};
+
+  const session=await getActiveSession();
+  if(!session?.user?.id)return {wallpaper:null,privatePreview:false};
+
+  const candidate=await Wallpaper.findOne({slug}).lean();
+  if(!candidate)return {wallpaper:null,privatePreview:false};
+
+  const isOwner=String(candidate.publisherId)===session.user.id;
+  const isAdmin=session.user.role==="admin";
+  if(!isOwner&&!isAdmin)return {wallpaper:null,privatePreview:false};
+
+  return {wallpaper:candidate,privatePreview:true};
+}
+
 export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{
   const {slug}=await params;
   await connectDB();
@@ -33,11 +50,12 @@ export default async function WallpaperPage({params}:{params:Promise<{slug:strin
   const {slug}=await params;
   await connectDB();
 
-  const w=await Wallpaper.findOne({slug,status:"published"}).lean();
+  const {wallpaper:w,privatePreview}=await findWallpaperForRequest(slug);
   if(!w)notFound();
 
-  const session=await getActiveSession();
-  const [liked,saved]=session?.user?.id
+  const session=privatePreview?await getActiveSession():await getActiveSession();
+  const canInteract=w.status==="published";
+  const [liked,saved]=canInteract&&session?.user?.id
     ? await Promise.all([
         Like.exists({userId:session.user.id,wallpaperId:w._id}),
         Save.exists({userId:session.user.id,wallpaperId:w._id})
@@ -53,27 +71,37 @@ export default async function WallpaperPage({params}:{params:Promise<{slug:strin
   const shareUrl=(process.env.NEXT_PUBLIC_APP_URL||"http://localhost:3000")+"/wallpapers/"+w.slug;
 
   return <main className="container" style={{padding:"40px 0 80px"}}>
+    {privatePreview?<div className="card" style={{padding:"12px 14px",marginBottom:14,borderColor:"#3a4352"}}>
+      <strong>Private publisher preview</strong>
+      <span className="muted" style={{display:"block",marginTop:4,fontSize:13}}>
+        This wallpaper is currently {w.status==="pending_review"?"pending review":w.status.replace("_"," ")} and is not visible in the public gallery.
+      </span>
+    </div>:null}
+
     <div className="card" style={{padding:14}}>
       <WallpaperViewer title={w.title} devices={devices} variants={variants}/>
       <div style={{padding:"8px 8px 10px"}}>
         <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",marginBottom:10}}>
           <span className="badge">{w.category}</span>
           {devices.map((device:string)=><span className="badge badge-selected" key={device}>{DEVICE_LABELS[device]||device}</span>)}
+          <span className="badge">{w.status}</span>
           <span className={w.qualityStatus==="pass"?"badge badge-selected":"badge"}>{w.qualityStatus}</span>
         </div>
         <h1 style={{fontSize:"clamp(30px,5vw,42px)",lineHeight:1.05,margin:"0 0 8px",overflowWrap:"anywhere"}}>{w.title}</h1>
         <p className="muted">{w.source?.width}×{w.source?.height} source · ❤️ {w.likeCount} · 🔖 {w.saveCount} · ⬇ {w.downloadCount}</p>
-        <div style={{marginTop:14}}>
-          <WallpaperActions
-            wallpaperId={String(w._id)}
-            initialLikes={w.likeCount}
-            initialLiked={Boolean(liked)}
-            initialSaved={Boolean(saved)}
-            shareUrl={shareUrl}
-            title={w.title}
-            devices={devices}
-          />
-        </div>
+        {canInteract
+          ? <div style={{marginTop:14}}>
+              <WallpaperActions
+                wallpaperId={String(w._id)}
+                initialLikes={w.likeCount}
+                initialLiked={Boolean(liked)}
+                initialSaved={Boolean(saved)}
+                shareUrl={shareUrl}
+                title={w.title}
+                devices={devices}
+              />
+            </div>
+          : <p className="muted" style={{margin:"14px 0 0",fontSize:13}}>Like, save and download actions become available after this wallpaper is published.</p>}
       </div>
     </div>
   </main>;
