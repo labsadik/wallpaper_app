@@ -136,7 +136,7 @@ export default function WallpaperActions({
           onChange={event=>setDownloadDevice(event.target.value)}
           disabled={downloadBusy}
           aria-label="Download device"
-          style={{padding:"10px 12px",borderRadius:12,border:"1px solid var(--line)",background:"#171c25",color:"white"}}
+          style={{padding:"10px 12px",borderRadius:12,border:"1px solid var(--line)",background:"var(--input)",color:"var(--text)"}}
         >
           {availableDevices.map(device=><option value={device} key={device}>Download {DEVICE_LABELS[device]||device}</option>)}
         </select>
@@ -154,8 +154,8 @@ export default function WallpaperActions({
         <span>{downloadStatus||"Preparing…"}</span>
         <strong>{downloadProgress}%</strong>
       </div>
-      <div style={{height:7,borderRadius:999,background:"#202633",overflow:"hidden"}}>
-        <div style={{height:"100%",width:downloadProgress+"%",background:"#fff",transition:"width .2s ease"}}/>
+      <div style={{height:7,borderRadius:999,background:"#e2e8f0",overflow:"hidden"}}>
+        <div style={{height:"100%",width:downloadProgress+"%",background:"#111827",transition:"width .2s ease"}}/>
       </div>
     </div>:null}
   </div>;
