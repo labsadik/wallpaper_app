@@ -12,6 +12,7 @@ import WallpaperCard from "@/components/wallpaper-card";
 import VerifiedBadge from "@/components/verified-badge";
 import ProfileFollowButton from "@/components/profile-follow-button";
 import ProfileStats from "@/components/profile-stats";
+import ProfileShareButton from "@/components/profile-share-button";
 
 export const dynamic="force-dynamic";
 
@@ -46,7 +47,7 @@ export default async function PublicProfilePage({params}:Props){
 
   const session=await getActiveSession();
   const isSelf=Boolean(session?.user?.id===String(user._id));
-  const [wallpapers,followers,followingCount,viewerFollowing]=await Promise.all([
+  const [wallpapers,followers,followingCount,totalItems,totalDownloads,viewerFollowing]=await Promise.all([
     Wallpaper.find({
       publisherId:user._id,
       status:"published"
@@ -57,6 +58,11 @@ export default async function PublicProfilePage({params}:Props){
       .lean(),
     Follow.countDocuments({followingId:user._id}),
     Follow.countDocuments({followerId:user._id}),
+    Wallpaper.countDocuments({publisherId:user._id,status:"published"}),
+    Wallpaper.aggregate([
+      {$match:{publisherId:user._id,status:"published"}},
+      {$group:{_id:null,total:{$sum:{$ifNull:["$downloadCount",0]}}}}
+    ]).then(rows=>Number(rows[0]?.total)||0),
     session&&!isSelf
       ? Follow.exists({followerId:session.user.id,followingId:user._id})
       : Promise.resolve(false)
@@ -78,9 +84,15 @@ export default async function PublicProfilePage({params}:Props){
           {user.role==="publisher"&&user.isVerified?<VerifiedBadge label="Verified publisher"/>:null}
         </div>
         <p className="public-profile-username">@{user.username}</p>
-        <ProfileStats username={user.username} followers={followers} following={followingCount} wallpapers={wallpapers.length}/>
+        <ProfileStats username={user.username} followers={followers} following={followingCount} wallpapers={totalItems}/>
+        <div className="public-profile-detail-stats">
+          <div><strong>Created</strong><span>{new Date(user.createdAt||Date.now()).toLocaleDateString()}</span></div>
+          <div><strong>Total items</strong><span>{totalItems.toLocaleString()}</span></div>
+          <div><strong>Total downloads</strong><span>{totalDownloads.toLocaleString()}</span></div>
+        </div>
         <div className="public-profile-actions">
           <ProfileFollowButton username={user.username} initialFollowing={Boolean(viewerFollowing)} isSelf={isSelf} authenticated={Boolean(session)}/>
+          <ProfileShareButton username={user.username} name={user.name||user.username}/>
         </div>
         <div className="public-profile-badges">
           {user.role==="publisher"?<span className="badge">{user.isVerified?"Verified publisher":"Publisher"}</span>:<span className="badge">Member</span>}
