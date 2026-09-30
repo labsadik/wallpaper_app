@@ -3,7 +3,10 @@ import {getActiveSession} from "@/lib/admin";
 import {redirect} from "next/navigation";
 import {connectDB} from "@/lib/mongodb";
 import Wallpaper from "@/models/Wallpaper";
-import {bunnyPublicUrl} from "@/lib/bunny";
+import {signedMediaUrl} from "@/lib/media";
+import {autoPublishDueWallpapers} from "@/lib/wallpaper-publish";
+import AutoPublishIndicator from "@/components/auto-publish-indicator";
+import PublisherWallpaperActions from "@/components/publisher-wallpaper-actions";
 import WallpaperCard from "@/components/wallpaper-card";
 
 const STATUS_LABELS=[["processing","Processing"],["pending_review","Pending review"],["published","Published"]] as const;
@@ -14,6 +17,7 @@ export default async function PublisherPage(){
   if(!["publisher","admin"].includes(session.user.role)) redirect("/account");
 
   await connectDB();
+  await autoPublishDueWallpapers();
   const publisherFilter=session.user.role==="admin"?{}:{publisherId:session.user.id};
   const [items,counts]=await Promise.all([
     Wallpaper.find(publisherFilter).sort({createdAt:-1}).limit(12).lean(),
@@ -67,8 +71,9 @@ export default async function PublisherPage(){
                 devices={item.devices||["desktop","tablet","mobile"]}
               />
               <div style={{display:"flex",gap:7,flexWrap:"wrap",padding:"0 2px"}}>
-                <span className="badge">{item.status==="pending_review"?"Pending review":item.status}</span>
+                <AutoPublishIndicator wallpaperId={String(item._id)} status={item.status} publishAt={item.publishAt?new Date(item.publishAt).toISOString():null}/>
                 <span className={item.qualityStatus==="pass"?"badge badge-selected":"badge"}>{item.qualityStatus}</span>
+                <PublisherWallpaperActions wallpaperId={String(item._id)} status={item.status}/>
               </div>
             </div>)}
           </div>
@@ -77,7 +82,7 @@ export default async function PublisherPage(){
 
     <div className="card" style={{padding:22,marginTop:28}}>
       <h2 style={{fontSize:22,margin:0}}>Automatic processing</h2>
-      <p className="muted" style={{marginTop:8}}>Format and integrity → resolution/quality signal → duplicate check → optimization → desktop/tablet/mobile/thumbnail variants → review. Your selected target devices are stored as metadata and shown throughout the UI.</p>
+      <p className="muted" style={{marginTop:8}}>Format and integrity → quality signal → duplicate check → optimization → selected device variants → automatic publish after 20 seconds. You can publish immediately or delete your own posts.</p>
     </div>
   </main>;
 }
