@@ -66,6 +66,8 @@ export default async function WallpaperPage({params}:{params:Promise<{slug:strin
             initialLiked={Boolean(liked)}
             initialSaved={Boolean(saved)}
             shareUrl={shareUrl}
+            title={w.title}
+            devices={devices}
           />
         </div>
       </div>
