@@ -46,7 +46,7 @@ async function main(){
         "content-type":"application/x-www-form-urlencoded",
         "cookie":csrfCookie
       },
-      body:new URLSearchParams({csrfToken:csrf.csrfToken,email,password,json:"true"}).toString(),
+      body:new URLSearchParams({csrfToken:csrf.csrfToken,email:email!,password:password!,json:"true"}).toString(),
       redirect:"manual"
     });
 
