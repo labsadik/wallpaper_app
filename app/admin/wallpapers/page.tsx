@@ -68,7 +68,7 @@ export default async function AdminWallpapersPage({searchParams}:{searchParams:P
         ? <div className="card" style={{padding:24}}><p className="muted" style={{margin:0}}>No wallpapers match the current filters.</p></div>
         : items.map(item=>{
           const publisher=item.publisherId as any;
-          const devices=item.devices||["desktop","tablet","mobile"];
+          const devices=item.devices||["desktop"];
           return <article className="card" key={String(item._id)} style={{padding:14}}>
             <div className="admin-post-row">
               <div>
