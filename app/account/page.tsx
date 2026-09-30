@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {getActiveSession} from "@/lib/admin";
 import {redirect} from "next/navigation";
 import PageShell from "@/components/page-shell";
@@ -15,7 +16,18 @@ export default async function AccountPage(){
   return <PageShell eyebrow="Account" title={session.user.name||"Your account"} description={session.user.email||undefined}>
     <section className="card account-profile-card">
       <div className="profile-avatar-large">
-        {avatarUrl?<img className="protected-image" draggable={false} src={avatarUrl} alt="Profile avatar"/>:<span>{(session.user.name||"U").slice(0,1).toUpperCase()}</span>}
+        {avatarUrl
+          ? <Image
+              className="protected-image"
+              draggable={false}
+              src={avatarUrl}
+              alt="Profile avatar"
+              width={96}
+              height={96}
+              unoptimized
+              style={{width:"100%",height:"100%",objectFit:"cover"}}
+            />
+          : <span>{(session.user.name||"U").slice(0,1).toUpperCase()}</span>}
       </div>
       <div className="account-profile-details">
         <div className="account-name-row">
