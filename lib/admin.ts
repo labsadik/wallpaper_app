@@ -9,7 +9,7 @@ export async function getActiveSession(){
 
 export async function requireAdmin(){
   const session=await getActiveSession();
-  if(!session) return {session:null as const,unauthorized:true as const};
+  if(!session) return {session:null,unauthorized:true as const};
   if(session.user.role!=="admin") return {session,forbidden:true as const};
   return {session,forbidden:false as const,unauthorized:false as const};
 }
