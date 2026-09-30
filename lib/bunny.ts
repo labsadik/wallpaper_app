@@ -2,9 +2,7 @@ const storageHostname=process.env.BUNNY_STORAGE_HOSTNAME||"storage.bunnycdn.com"
 const storageZone=process.env.BUNNY_STORAGE_ZONE;
 const storagePassword=process.env.BUNNY_STORAGE_PASSWORD;
 
-export function bunnyConfigured(){
-  return !!(storageZone&&storagePassword&&storageHostname);
-}
+export function bunnyConfigured(){return !!(storageZone&&storagePassword&&storageHostname);}
 
 export async function uploadToBunny(path:string,body:Buffer,contentType:string){
   if(!bunnyConfigured()) throw new Error("Bunny Storage is not configured");
@@ -16,5 +14,5 @@ export async function uploadToBunny(path:string,body:Buffer,contentType:string){
 export function bunnyPublicUrl(path:string){
   const host=process.env.BUNNY_CDN_HOSTNAME;
   if(!host) throw new Error("Missing BUNNY_CDN_HOSTNAME");
-  return "https://"+host.replace(/^https?:\\/\\//,"")+"/"+path.split("/").map(encodeURIComponent).join("/");
+  return "https://"+host.replace(/^https?:\/\//,"")+"/"+path.split("/").map(encodeURIComponent).join("/");
 }
