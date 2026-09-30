@@ -6,14 +6,24 @@ import {getActiveSession} from "@/lib/admin";
 import {connectDB} from "@/lib/mongodb";
 import User from "@/models/User";
 import {uploadToBunny,deleteFromBunny} from "@/lib/bunny";
+import {getClientKey,rateLimit,rateLimitedResponse} from "@/lib/rate-limit";
 
 export const runtime="nodejs";
 
 export async function POST(request:Request){
   const session=await getActiveSession();
   if(!session?.user?.id)return NextResponse.json({error:"Unauthorized"},{status:401});
-  await connectDB();
 
+  const limiter=rateLimit(
+    "avatar:"+session.user.id+":"+getClientKey(request,"ip"),
+    10,
+    60*60*1000
+  );
+  if(!limiter.allowed){
+    return NextResponse.json({error:"Avatar update limit reached. Please try again later."},rateLimitedResponse(limiter.retryAfterSeconds));
+  }
+
+  await connectDB();
   const user=await User.findById(session.user.id);
   if(!user)return NextResponse.json({error:"User not found."},{status:404});
 
@@ -43,9 +53,7 @@ export async function POST(request:Request){
     user.avatarKey=key;
     await user.save();
 
-    if(oldKey&&oldKey!==key){
-      await deleteFromBunny(oldKey).catch(()=>{});
-    }
+    if(oldKey&&oldKey!==key)await deleteFromBunny(oldKey).catch(()=>{});
 
     return NextResponse.json({ok:true,avatarKey:key});
   }catch(error){
