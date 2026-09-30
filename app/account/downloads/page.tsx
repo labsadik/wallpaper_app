@@ -1,6 +1,5 @@
 import Link from "next/link";
-import {getServerSession} from "next-auth";
-import {authOptions} from "@/lib/auth";
+import {getActiveSession} from "@/lib/admin";
 import {connectDB} from "@/lib/mongodb";
 import Download from "@/models/Download";
 import PageShell from "@/components/page-shell";
@@ -10,7 +9,7 @@ import {bunnyPublicUrl} from "@/lib/bunny";
 export const dynamic="force-dynamic";
 
 export default async function DownloadHistoryPage(){
-  const session=await getServerSession(authOptions);
+  const session=await getActiveSession();
   if(!session?.user?.id) return null;
   await connectDB();
 
