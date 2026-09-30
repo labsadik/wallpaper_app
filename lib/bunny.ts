@@ -64,6 +64,20 @@ export async function uploadToBunny(path:string,body:Buffer,contentType:string){
   return {url};
 }
 
+export async function downloadFromBunny(path:string){
+  const accessKey=required("BUNNY_STORAGE_PASSWORD");
+  const response=await fetch(storageObjectUrl(path),{
+    method:"GET",
+    headers:{AccessKey:accessKey},
+    cache:"no-store"
+  });
+  if(!response.ok){
+    const detail=(await response.text()).slice(0,500);
+    throw new Error("Bunny download failed ("+response.status+"): "+detail);
+  }
+  return Buffer.from(await response.arrayBuffer());
+}
+
 export async function deleteFromBunny(path:string){
   const accessKey=required("BUNNY_STORAGE_PASSWORD");
   const response=await fetch(storageObjectUrl(path),{
