@@ -20,7 +20,7 @@ export default async function PublisherPage(){
   await autoPublishDueWallpapers();
   const publisherFilter=session.user.role==="admin"?{}:{publisherId:session.user.id};
   const [items,counts]=await Promise.all([
-    Wallpaper.find(publisherFilter).sort({createdAt:-1}).limit(12).lean(),
+    Wallpaper.find({...publisherFilter,status:{$ne:"archived"}}).sort({createdAt:-1}).limit(12).lean(),
     Promise.all(STATUS_LABELS.map(async([status])=>[status,await Wallpaper.countDocuments({...publisherFilter,status})] as const))
   ]);
   const countMap=Object.fromEntries(counts) as Record<string,number>;
