@@ -5,7 +5,8 @@ import {redirect} from "next/navigation";
 import {connectDB} from "@/lib/mongodb";
 import Wallpaper from "@/models/Wallpaper";
 import AdminWallpaperActions from "@/components/admin-wallpaper-actions";
-import {bunnyPublicUrl} from "@/lib/bunny";
+import {signedMediaUrl} from "@/lib/media";
+import AdminBulkPublish from "@/components/admin-bulk-publish";
 
 export const dynamic="force-dynamic";
 
@@ -22,6 +23,8 @@ export default async function AdminWallpapersPage({searchParams}:{searchParams:P
   const category=(params.category||"").trim();
 
   await connectDB();
+  const {autoPublishDueWallpapers}=await import("@/lib/wallpaper-publish");
+  await autoPublishDueWallpapers();
   const filter:Record<string,unknown>={};
   if(status&&["draft","processing","pending_review","published","rejected","archived"].includes(status))filter.status=status;
   if(category)filter.category=category;
@@ -41,7 +44,8 @@ export default async function AdminWallpapersPage({searchParams}:{searchParams:P
       </div>
       <div style={{display:"flex",gap:10}}>
         <Link href="/admin" className="btn">Back to admin</Link>
-        <Link href="/publisher/upload" className="btn btn-primary">Upload</Link>
+        <AdminBulkPublish/>
+        <Link href="/publisher/upload" className="btn">Upload</Link>
       </div>
     </div>
 
@@ -68,7 +72,7 @@ export default async function AdminWallpapersPage({searchParams}:{searchParams:P
             <div className="admin-post-row">
               <div>
                 {item.variants?.thumbnail?.key
-                  ? <Image src={bunnyPublicUrl(item.variants.thumbnail.key)} alt={item.title} width={460} height={290} sizes="(max-width: 760px) 100vw, 460px" unoptimized style={{display:"block",width:"100%",aspectRatio:"16/10",objectFit:"cover",borderRadius:12}}/>
+                  ? <Image src={signedMediaUrl(item.variants.thumbnail.key)} alt={item.title} width={460} height={290} sizes="(max-width: 760px) 100vw, 460px" unoptimized style={{display:"block",width:"100%",aspectRatio:"16/10",objectFit:"cover",borderRadius:12}}/>
                   : <div style={{aspectRatio:"16/10",borderRadius:12,background:"#0d1118"}}/>
                 }
               </div>
