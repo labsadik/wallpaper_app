@@ -8,13 +8,43 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm install
+          cache: npm
+      - run: npm ci
       - run: npm run typecheck
-      - run: npm run test-image-processing
+      - run: npm test
       - run: npm run lint
       - run: npm run build
+
+      - name: Start production server
+        run: |
+          npm run start > /tmp/wallpaper-saas.log 2>&1 &
+          echo $! > /tmp/wallpaper-saas.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:3000/api/health >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/wallpaper-saas.log
+          exit 1
+
+      - name: Smoke test
+        env:
+          TEST_BASE_URL: http://127.0.0.1:3000
+        run: npm run test:smoke
+
+      - name: Baseline load test
+        env:
+          TEST_BASE_URL: http://127.0.0.1:3000
+          LOAD_TEST_REQUESTS: 100
+          LOAD_TEST_CONCURRENCY: 10
+        run: npm run test:load
+
+      - name: Stop production server
+        if: always()
+        run: |
+          if [ -f /tmp/wallpaper-saas.pid ]; then kill $(cat /tmp/wallpaper-saas.pid) || true; fi
