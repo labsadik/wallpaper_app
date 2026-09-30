@@ -132,14 +132,17 @@ export default async function WallpaperPage({params}:{params:Promise<{slug:strin
         </div>
 
         <h1>{w.title}</h1>
-        <p className="muted">{w.source?.width}×{w.source?.height} source · ❤️ {w.likeCount} · 🔖 {w.saveCount} · ⬇ {w.downloadCount}</p>
+        <div className="wallpaper-detail-stats"><span>❤️ {w.likeCount||0} likes</span><span>🔖 {w.saveCount||0} saves</span><span>⬇ {w.downloadCount||0} downloads</span><span>↗ {w.shareCount||0} shares</span><span>{w.source?.width||"—"}×{w.source?.height||"—"} source</span></div>
         <PublishedAt value={w.publishedAt?new Date(w.publishedAt).toISOString():null}/>
 
         {canInteract
           ? <div style={{marginTop:14}}>
               <WallpaperActions
                 wallpaperId={String(w._id)}
-                initialLikes={w.likeCount}
+                initialLikes={w.likeCount||0}
+                initialSaves={w.saveCount||0}
+                initialDownloads={w.downloadCount||0}
+                initialShares={w.shareCount||0}
                 initialLiked={Boolean(liked)}
                 initialSaved={Boolean(saved)}
                 shareUrl={shareUrl}
