@@ -9,7 +9,7 @@ export default function PublisherUploadPage(){
     const fd=new FormData();fd.set("title",title);fd.set("category",category);fd.set("file",file);
     const r=await fetch("/api/publisher/upload",{method:"POST",body:fd});const d=await r.json();setStatus(r.ok?"Submitted for review. Your wallpaper is being prepared.":(d.error||"Upload failed"));
   }
-  return <PageShell eyebrow="Publisher Studio" title="Upload wallpaper" description="Upload one source image. Resolution checks, duplicate detection, optimization and device variants are automatic.">
+  return <PageShell eyebrow="Publisher Studio" title="Upload wallpaper" description="Upload one source image. Any supported resolution is accepted; lower-resolution sources receive a quality warning. Duplicate detection, optimization and device variants are automatic.">
     <form onSubmit={submit} className="card" style={{padding:24,maxWidth:860,display:"grid",gap:20}}>
       <label className="card" style={{minHeight:250,borderStyle:"dashed",display:"grid",placeItems:"center",padding:28,cursor:"pointer",background:"#0d1118"}}>
         <input type="file" hidden accept="image/jpeg,image/png,image/webp,image/avif" onChange={e=>setFile(e.target.files?.[0]||null)}/>
@@ -25,7 +25,7 @@ export default function PublisherUploadPage(){
       </div>
       <div className="card" style={{padding:16,display:"grid",gap:9}}>
         <strong>Automatic checks</strong>
-        <span className="muted">✓ Format and integrity · ✓ Resolution · ✓ Duplicate detection · ✓ Quality · ✓ Desktop/tablet/mobile variants · ✓ File optimization</span>
+        <span className="muted">✓ Format and integrity · ✓ Any resolution accepted · ✓ Quality warning for smaller sources · ✓ Duplicate detection · ✓ Desktop/tablet/mobile variants · ✓ File optimization</span>
       </div>
       <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
         <Button variant="primary" type="submit">Upload and process</Button>
