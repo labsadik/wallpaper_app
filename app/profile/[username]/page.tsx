@@ -4,10 +4,13 @@ import {notFound} from "next/navigation";
 import type {Metadata} from "next";
 import User from "@/models/User";
 import Wallpaper from "@/models/Wallpaper";
+import Follow from "@/models/Follow";
+import {getActiveSession} from "@/lib/admin";
 import {connectDB} from "@/lib/mongodb";
 import {signedMediaUrl} from "@/lib/media";
 import WallpaperCard from "@/components/wallpaper-card";
 import VerifiedBadge from "@/components/verified-badge";
+import ProfileFollowButton from "@/components/profile-follow-button";
 
 export const dynamic="force-dynamic";
 
@@ -40,14 +43,23 @@ export default async function PublicProfilePage({params}:Props){
   const user=await getProfile(username);
   if(!user)notFound();
 
-  const wallpapers=await Wallpaper.find({
-    publisherId:user._id,
-    status:"published"
-  })
-    .sort({publishedAt:-1,createdAt:-1})
-    .limit(60)
-    .select("slug title category devices variants publishedAt likeCount downloadCount")
-    .lean();
+  const session=await getActiveSession();
+  const isSelf=Boolean(session?.user?.id===String(user._id));
+  const [wallpapers,followers,followingCount,viewerFollowing]=await Promise.all([
+    Wallpaper.find({
+      publisherId:user._id,
+      status:"published"
+    })
+      .sort({publishedAt:-1,createdAt:-1})
+      .limit(60)
+      .select("slug title category devices variants publishedAt likeCount downloadCount")
+      .lean(),
+    Follow.countDocuments({followingId:user._id}),
+    Follow.countDocuments({followerId:user._id}),
+    session&&!isSelf
+      ? Follow.exists({followerId:session.user.id,followingId:user._id})
+      : Promise.resolve(false)
+  ]);
 
   const deviceKeys=["desktop","tablet","mobile"] as const;
   const avatarUrl=user.avatarKey?signedMediaUrl(user.avatarKey):null;
@@ -65,9 +77,20 @@ export default async function PublicProfilePage({params}:Props){
           {user.role==="publisher"&&user.isVerified?<VerifiedBadge label="Verified publisher"/>:null}
         </div>
         <p className="public-profile-username">@{user.username}</p>
+        <div className="public-profile-stats">
+          <Link href={"/profile/"+user.username+"/followers"} className="public-profile-stat">
+            <strong>{followers}</strong><span>Followers</span>
+          </Link>
+          <Link href={"/profile/"+user.username+"/following"} className="public-profile-stat">
+            <strong>{followingCount}</strong><span>Following</span>
+          </Link>
+          <span className="public-profile-stat"><strong>{wallpapers.length}</strong><span>Wallpapers</span></span>
+        </div>
+        <div className="public-profile-actions">
+          <ProfileFollowButton username={user.username} initialFollowing={Boolean(viewerFollowing)} isSelf={isSelf} authenticated={Boolean(session)}/>
+        </div>
         <div className="public-profile-badges">
           {user.role==="publisher"?<span className="badge">{user.isVerified?"Verified publisher":"Publisher"}</span>:<span className="badge">Member</span>}
-          <span className="badge">{wallpapers.length} published</span>
         </div>
         <p className="muted">Public profile · Email and private account details are not shown.</p>
       </div>
