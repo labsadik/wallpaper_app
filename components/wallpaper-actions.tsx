@@ -52,7 +52,7 @@ export default function WallpaperActions({
       const d=await r.json().catch(()=>({}));
       if(!r.ok){
         if(r.status===401){
-          window.location.href="/login?callbackUrl="+encodeURIComponent(window.location.pathname);
+          router.push("/login?callbackUrl="+encodeURIComponent(window.location.pathname));
         }
         return;
       }
