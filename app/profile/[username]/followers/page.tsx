@@ -25,7 +25,7 @@ export default async function FollowersPage({params}:{params:Promise<{username:s
     <div className="connection-page-head">
       <div>
         <p className="muted" style={{margin:"0 0 4px",fontWeight:700}}>Social profile</p>
-        <h1>{user.name||user.username}'s Followers</h1>
+        <h1>{user.name||user.username}&apos;s Followers</h1>
         <p className="muted">@{user.username} · {ordered.length} shown</p>
       </div>
       <Link className="btn" href={"/profile/"+user.username}>Back to profile</Link>
