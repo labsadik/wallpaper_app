@@ -13,7 +13,7 @@ const actionSchema=z.object({
 });
 
 function durationMs(duration:string){
-  const map:Record<string,number>={1h:60*60*1000,"24h":24*60*60*1000,"7d":7*24*60*60*1000,"30d":30*24*60*60*1000};
+  const map:Record<string,number>={"1h":60*60*1000,"24h":24*60*60*1000,"7d":7*24*60*60*1000,"30d":30*24*60*60*1000};
   return map[duration]??0;
 }
 
