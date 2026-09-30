@@ -10,9 +10,7 @@ export const dynamic="force-dynamic";
 
 type SearchParams={q?:string;category?:string;sort?:string};
 
-function escapeRegex(value:string){
-  return value.replace(/[.*+?^{}()|[\]\\]/g,"\\$&");
-}
+function escapeRegex(value:string){return value.replace(/[.*+?^{}()|[\]\\]/g,"\\$&");}
 
 const SORTS=[
   ["newest","Newest"],
@@ -39,11 +37,11 @@ export default async function WallpapersPage({searchParams}:{searchParams:Promis
   }
 
   const sortMap:Record<string,Record<string,1|-1>>={
-    newest:{createdAt:-1},
+    newest:{publishedAt:-1,createdAt:-1},
     "title-asc":{title:1},
     "title-desc":{title:-1},
-    likes:{likeCount:-1,createdAt:-1},
-    downloads:{downloadCount:-1,createdAt:-1}
+    likes:{likeCount:-1,publishedAt:-1},
+    downloads:{downloadCount:-1,publishedAt:-1}
   };
 
   const [wallpapers,categories]=await Promise.all([
@@ -53,15 +51,12 @@ export default async function WallpapersPage({searchParams}:{searchParams:Promis
 
   const query=(extra:Record<string,string|undefined>={})=>{
     const values={q:q||undefined,category:category||undefined,sort:sort!=="newest"?sort:undefined,...extra};
-    return Object.entries(values)
-      .filter(([,value])=>value)
-      .map(([key,value])=>key+"="+encodeURIComponent(String(value)))
-      .join("&");
+    return Object.entries(values).filter(([,value])=>value).map(([key,value])=>key+"="+encodeURIComponent(String(value))).join("&");
   };
 
   return <PageShell eyebrow="Discover" title="Wallpapers" description="Browse wallpapers by category, title, popularity and download activity.">
     <form method="get" style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:12}}>
-      <input name="q" defaultValue={q} placeholder="Search by title, category or tag…" aria-label="Search wallpapers" style={{flex:"1 1 280px",minWidth:220,padding:"11px 13px",borderRadius:12,border:"1px solid var(--line)",background:"#0d1118",color:"white"}}/>
+      <input name="q" defaultValue={q} placeholder="Search by title, category or tag…" aria-label="Search wallpapers" className="theme-input" />
       {category?<input type="hidden" name="category" value={category}/>:null}
       <input type="hidden" name="sort" value={sort}/>
       <button className="btn btn-primary" type="submit">Search</button>
@@ -80,7 +75,7 @@ export default async function WallpapersPage({searchParams}:{searchParams:Promis
         {q?<input type="hidden" name="q" value={q}/>:null}
         {category?<input type="hidden" name="category" value={category}/>:null}
         <label className="muted" htmlFor="wallpaper-sort">Sort</label>
-        <select id="wallpaper-sort" name="sort" defaultValue={sort} style={{padding:"9px 11px",borderRadius:10,border:"1px solid var(--line)",background:"#0d1118",color:"white"}}>
+        <select id="wallpaper-sort" name="sort" defaultValue={sort} className="theme-select">
           {SORTS.map(([value,label])=><option key={value} value={value}>{label}</option>)}
         </select>
         <button className="btn" type="submit">Apply</button>
@@ -88,18 +83,17 @@ export default async function WallpapersPage({searchParams}:{searchParams:Promis
     </div>
 
     {wallpapers.length===0
-      ? <div className="card" style={{padding:28}}><h2 style={{margin:"0 0 8px",fontSize:22}}>No published wallpapers found</h2><p className="muted" style={{margin:0}}>Try another title, category or sort.</p></div>
-      : <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:18}}>
-          {wallpapers.map(item=><WallpaperCard
-            key={String(item._id)}
-            slug={item.slug}
-            title={item.title}
-            category={item.category}
-            likes={item.likeCount}
-            downloads={item.downloadCount}
-            imageUrl={item.variants?.thumbnail?.key?signedMediaUrl(item.variants.thumbnail.key):undefined}
-            devices={item.devices||["desktop","tablet","mobile"]}
-          />)}
-        </div>}
+      ? <div className="card empty-state"><h2>No published wallpapers found</h2><p className="muted">Try another title, category or sort.</p></div>
+      : <div className="wallpaper-grid">{wallpapers.map(item=><WallpaperCard
+          key={String(item._id)}
+          slug={item.slug}
+          title={item.title}
+          category={item.category}
+          likes={item.likeCount}
+          downloads={item.downloadCount}
+          imageUrl={item.variants?.thumbnail?.key?signedMediaUrl(item.variants.thumbnail.key):undefined}
+          devices={item.devices||["desktop","tablet","mobile"]}
+          publishedAt={item.publishedAt?new Date(item.publishedAt).toISOString():null}
+        />)}</div>}
   </PageShell>;
 }
