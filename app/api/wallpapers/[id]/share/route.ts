@@ -1,5 +1,4 @@
 import {NextResponse} from "next/server";
-import {getActiveSession} from "@/lib/admin";
 import {connectDB} from "@/lib/mongodb";
 import Wallpaper from "@/models/Wallpaper";
 
