@@ -7,17 +7,34 @@ import AdminUserTable from "@/components/admin-user-table";
 
 export const dynamic="force-dynamic";
 
-export default async function AdminUsersPage(){
+type SearchParams={q?:string;role?:string;status?:string};
+
+export default async function AdminUsersPage({searchParams}:{searchParams:Promise<SearchParams>}){
   const session=await getActiveSession();
   if(!session)redirect("/login");
   if(session.user.role!=="admin")redirect("/account");
 
+  const params=await searchParams;
+  const q=(params.q||"").trim();
+  const role=(params.role||"").trim();
+  const status=(params.status||"").trim();
+
   await connectDB();
-  const users=await User.find({})
+  const filter:Record<string,unknown>={};
+  if(role&&["user","publisher","admin"].includes(role))filter.role=role;
+  if(status&&["active","suspended","banned"].includes(status))filter.status=status;
+  if(q)filter.$or=[{name:{$regex:q,$options:"i"}},{email:{$regex:q,$options:"i"}}];
+
+  const users=await User.find(filter)
     .select("name email role status suspensionUntil suspensionReason banReason createdAt")
     .sort({createdAt:-1})
     .limit(100)
     .lean();
+
+  const makeQuery=(next:{q?:string;role?:string;status?:string}={})=>{
+    const values={q:q||undefined,role:role||undefined,status:status||undefined,...next};
+    return Object.entries(values).filter(([,value])=>value).map(([key,value])=>key+"="+encodeURIComponent(String(value))).join("&");
+  };
 
   return <main className="container" style={{padding:"42px 0 80px"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:16,flexWrap:"wrap"}}>
@@ -29,9 +46,20 @@ export default async function AdminUsersPage(){
       <Link href="/admin" className="btn">Back to admin</Link>
     </div>
 
-    <div className="card" style={{padding:16,marginTop:20}}>
+    <form method="get" className="card" style={{padding:14,marginTop:20,display:"grid",gridTemplateColumns:"minmax(220px,1fr) 180px 180px auto",gap:10}}>
+      <input name="q" defaultValue={q} placeholder="Search name or email…" style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"#0d1118",color:"white"}}/>
+      <select name="role" defaultValue={role} style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"#0d1118",color:"white"}}>
+        <option value="">All roles</option><option value="user">User</option><option value="publisher">Publisher</option><option value="admin">Admin</option>
+      </select>
+      <select name="status" defaultValue={status} style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"#0d1118",color:"white"}}>
+        <option value="">All statuses</option><option value="active">Active</option><option value="suspended">Suspended</option><option value="banned">Banned</option>
+      </select>
+      <div style={{display:"flex",gap:8}}><button className="btn btn-primary" type="submit">Filter</button><Link className="btn" href="/admin/users">Reset</Link></div>
+    </form>
+
+    <div className="card" style={{padding:14,marginTop:12}}>
       <strong>{users.length} accounts shown</strong>
-      <span className="muted" style={{marginLeft:8,fontSize:13}}>Newest first</span>
+      <span className="muted" style={{marginLeft:8,fontSize:13}}>Newest first · click a user name to inspect their posts</span>
     </div>
 
     <div style={{marginTop:16}}>
