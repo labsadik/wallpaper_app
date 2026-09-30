@@ -69,7 +69,7 @@ export default async function PublisherPage(){
                 category={item.category}
                 likes={item.likeCount}
                 downloads={item.downloadCount}
-                imageUrl={item.variants?.thumbnail?.key?signedMediaUrl(item.variants.thumbnail.key):undefined}
+                imageUrl={item.variants?.[item.devices?.[0]||"desktop"]?.key?signedMediaUrl(item.variants?.[item.devices?.[0]||"desktop"]?.key):undefined}
                 devices={item.devices||["desktop","tablet","mobile"]}
                 publishedAt={item.publishedAt?new Date(item.publishedAt).toISOString():null}
               />
