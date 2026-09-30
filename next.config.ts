@@ -12,6 +12,9 @@ if(cdnHostname){
 
 const nextConfig:NextConfig={
   images:{
+    localPatterns:[
+      {pathname:"/api/media/**"}
+    ],
     remotePatterns
   },
   poweredByHeader:false
