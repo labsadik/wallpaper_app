@@ -103,7 +103,7 @@ export default function PublisherUploadPage(){
     title="Upload wallpaper"
     description="Preview your image, choose a category and select the target devices. Your choices are saved with the wallpaper."
   >
-    <form onSubmit={submit} style={{display:"grid",gridTemplateColumns:"minmax(0,1.2fr) minmax(320px,.8fr)",gap:20,alignItems:"start"}}>
+    <form onSubmit={submit} className="upload-layout">
       <section className="card" style={{padding:24,display:"grid",gap:20}}>
         <label className="card" style={{minHeight:250,borderStyle:"dashed",display:"grid",placeItems:"center",padding:24,cursor:"pointer",background:"#0d1118",overflow:"hidden",position:"relative"}}>
           <input type="file" hidden accept="image/jpeg,image/png,image/webp,image/avif" onChange={onFileChange}/>
@@ -146,7 +146,7 @@ export default function PublisherUploadPage(){
             <strong style={{fontSize:16}}>Target devices</strong>
             <p className="muted" style={{fontSize:13,margin:"4px 0 0"}}>Select where this wallpaper should be available.</p>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:10}}>
+          <div className="device-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:10}}>
             {DEVICES.map(device=>{
               const selected=devices.includes(device.id);
               return <button
@@ -198,7 +198,7 @@ export default function PublisherUploadPage(){
         </div>:null}
       </section>
 
-      <aside style={{display:"grid",gap:14,position:"sticky",top:20}}>
+      <aside className="sticky-preview" style={{display:"grid",gap:14,position:"sticky",top:20}}>
         <div className="card" style={{padding:20}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
             <div>
