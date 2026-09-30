@@ -14,7 +14,7 @@ export default async function HomePage(){
   const items=await Wallpaper.find({status:"published"})
     .sort({publishedAt:-1,createdAt:-1})
     .limit(8)
-    .select("slug title category devices variants.thumbnail.key publishedAt")
+    .select("slug title category devices variants publishedAt")
     .lean();
 
   return <div className="landing-shell">
@@ -58,7 +58,7 @@ export default async function HomePage(){
                     ? <Image
                         className="protected-image"
                         draggable={false}
-                        src={signedMediaUrl(item.variants.thumbnail.key)}
+                        src={signedMediaUrl(item.variants?.[item.devices?.[0]||"desktop"]?.key||"")}
                         alt={item.title}
                         fill
                         sizes="(max-width: 760px) 100vw, (max-width: 1100px) 50vw, 25vw"
