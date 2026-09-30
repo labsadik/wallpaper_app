@@ -33,7 +33,8 @@ export default async function DownloadHistoryPage(){
       category:w.category,
       likes:w.likeCount||0,
       downloads:w.downloadCount||0,
-      imageUrl:w.variants?.thumbnail?.key?bunnyPublicUrl(w.variants.thumbnail.key):undefined
+      imageUrl:w.variants?.thumbnail?.key?bunnyPublicUrl(w.variants.thumbnail.key):undefined,
+      devices:w.devices||["desktop","tablet","mobile"]
     };
   }).filter(Boolean);
 
