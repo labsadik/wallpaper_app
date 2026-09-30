@@ -6,7 +6,7 @@ import PublishedAt from "@/components/published-at";
 const DEVICE_LABELS:Record<string,string>={desktop:"PC",tablet:"Tablet",mobile:"Mobile"};
 
 export default function WallpaperCard({
-  slug,title,category,likes=0,downloads=0,imageUrl,devices=[],publishedAt
+  slug,title,category,likes=0,downloads=0,imageUrl,devices=[],publishedAt,imageWidth,imageHeight
 }:{
   slug:string;
   title:string;
@@ -16,11 +16,28 @@ export default function WallpaperCard({
   imageUrl?:string;
   devices?:string[];
   publishedAt?:string|Date|null;
+  imageWidth?:number;
+  imageHeight?:number;
 }){
+  const width=Math.max(1,imageWidth||16);
+  const height=Math.max(1,imageHeight||10);
+
   return <article className="card wallpaper-card">
     <Link href={"/wallpapers/"+slug} className="wallpaper-card-media">
-      <div className="wallpaper-card-image" style={{backgroundImage:imageUrl?undefined:"linear-gradient(135deg,#eef2f7,#cbd5e1)"}}>
-        {imageUrl?<Image className="protected-image" src={imageUrl} alt={title} fill draggable={false} sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" style={{objectFit:"cover"}} unoptimized/>:null}
+      <div className="wallpaper-card-image" style={{aspectRatio:width/height,backgroundImage:imageUrl?undefined:"linear-gradient(135deg,#eef2f7,#cbd5e1)"}}>
+        {imageUrl
+          ? <Image
+              className="protected-image"
+              src={imageUrl}
+              alt={title}
+              width={width}
+              height={height}
+              draggable={false}
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              style={{display:"block",width:"100%",height:"auto"}}
+              unoptimized
+            />
+          : null}
         <div className="wallpaper-card-overlay">
           <span className="badge">{category}</span>
           <div className="wallpaper-card-devices">
