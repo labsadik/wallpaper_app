@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {ChangeEvent,useRef,useState} from "react";
 import {useRouter} from "next/navigation";
 
@@ -7,18 +8,19 @@ export default function ProfileAvatarForm({name,avatarUrl}:{name:string;avatarUr
   const router=useRouter();
   const inputRef=useRef<HTMLInputElement>(null);
   const [preview,setPreview]=useState(avatarUrl||"");
+  const [file,setFile]=useState<File|null>(null);
   const [busy,setBusy]=useState(false);
   const [message,setMessage]=useState("");
 
   function choose(event:ChangeEvent<HTMLInputElement>){
-    const file=event.target.files?.[0];
-    if(!file)return;
-    setPreview(URL.createObjectURL(file));
+    const selected=event.target.files?.[0]||null;
+    if(!selected)return;
+    setFile(selected);
+    setPreview(URL.createObjectURL(selected));
     setMessage("");
   }
 
   async function upload(){
-    const file=inputRef.current?.files?.[0];
     if(!file)return;
     setBusy(true);setMessage("");
     try{
@@ -28,6 +30,8 @@ export default function ProfileAvatarForm({name,avatarUrl}:{name:string;avatarUr
       const data=await response.json().catch(()=>({}));
       if(!response.ok){setMessage(data.error||"Unable to update avatar.");return;}
       setMessage("Profile avatar updated.");
+      setFile(null);
+      if(inputRef.current)inputRef.current.value="";
       router.refresh();
     }catch{
       setMessage("Network error. Try again.");
@@ -39,7 +43,7 @@ export default function ProfileAvatarForm({name,avatarUrl}:{name:string;avatarUr
   return <div className="profile-avatar-editor card">
     <div className="profile-avatar-preview">
       {preview
-        ? <img className="protected-image" draggable={false} src={preview} alt="" />
+        ? <Image className="protected-image" draggable={false} src={preview} alt="" width={64} height={64} unoptimized/>
         : <span>{initial}</span>}
     </div>
     <div className="profile-avatar-copy">
@@ -48,7 +52,7 @@ export default function ProfileAvatarForm({name,avatarUrl}:{name:string;avatarUr
       <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/avif" hidden onChange={choose}/>
       <div className="profile-avatar-actions">
         <button className="btn" type="button" onClick={()=>inputRef.current?.click()} disabled={busy}>Choose image</button>
-        <button className="btn btn-primary" type="button" onClick={upload} disabled={busy||!inputRef.current?.files?.[0]}>
+        <button className="btn btn-primary" type="button" onClick={upload} disabled={busy||!file}>
           {busy?"Uploading…":"Save avatar"}
         </button>
         {message?<span className="muted" role="status">{message}</span>:null}
