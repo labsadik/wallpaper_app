@@ -5,7 +5,6 @@ import {getActiveSession} from "@/lib/admin";
 import {connectDB} from "@/lib/mongodb";
 import User from "@/models/User";
 import Wallpaper from "@/models/Wallpaper";
-import {signedMediaUrl} from "@/lib/media";
 import AdminUserTable from "@/components/admin-user-table";
 import AdminWallpaperActions from "@/components/admin-wallpaper-actions";
 import PublishedAt from "@/components/published-at";
@@ -35,6 +34,7 @@ export default async function AdminUserProfile({params}:{params:Promise<{id:stri
     email:user.email,
     role:user.role as "user"|"publisher"|"admin",
     status:user.status as "active"|"suspended"|"banned",
+    isVerified:Boolean(user.isVerified),
     suspensionUntil:user.suspensionUntil?new Date(user.suspensionUntil):null,
     suspensionReason:user.suspensionReason,
     banReason:user.banReason,
