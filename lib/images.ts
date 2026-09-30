@@ -16,8 +16,9 @@ export async function analyzeAndOptimize(buffer:Buffer):Promise<{
   const height=meta.height??0;
   const format=meta.format??"";
   if(!allowed.has(format)) throw new Error("Unsupported image format");
-  if(width<1280||height<720) throw new Error("Image resolution is too low for wallpaper publishing");
-
+  // Accept supported raster images at any resolution. Lower-resolution sources are
+  // still stored and processed, but are marked as a quality warning instead of
+  // blocking the publisher upload.
   const qualityStatus=width>=1920&&height>=1080?"pass":"warning";
   const desktop=await sharp(buffer).rotate().resize({width:2560,height:2560,fit:"inside",withoutEnlargement:true}).webp({quality:Number(process.env.IMAGE_QUALITY_WEBP||90),smartSubsample:true}).toBuffer();
   const tablet=await sharp(buffer).rotate().resize({width:2048,height:2048,fit:"inside",withoutEnlargement:true}).webp({quality:Number(process.env.IMAGE_QUALITY_WEBP||90),smartSubsample:true}).toBuffer();
