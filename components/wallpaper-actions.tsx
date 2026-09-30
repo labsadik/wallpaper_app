@@ -1,7 +1,6 @@
 "use client";
 
 import {useMemo,useState} from "react";
-import {useRouter} from "next/navigation";
 
 const DEVICE_LABELS:Record<string,string>={desktop:"PC",tablet:"Tablet",mobile:"Mobile"};
 
@@ -12,7 +11,8 @@ export default function WallpaperActions({
   initialSaved=false,
   shareUrl,
   title,
-  devices=[]
+  devices=[],
+  authenticated=true
 }:{
   wallpaperId:string;
   initialLikes:number;
@@ -21,8 +21,8 @@ export default function WallpaperActions({
   shareUrl:string;
   title?:string;
   devices?:string[];
+  authenticated?:boolean;
 }){
-  const router=useRouter();
   const [likes,setLikes]=useState(initialLikes);
   const [liked,setLiked]=useState(initialLiked);
   const [saved,setSaved]=useState(initialSaved);
@@ -38,16 +38,17 @@ export default function WallpaperActions({
     setBusy(true);
     try{
       const r=await fetch("/api/wallpapers/"+wallpaperId+"/"+type,{method:"POST"});
-      if(r.status===401){
-        router.push("/login?callbackUrl="+encodeURIComponent(window.location.pathname));
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok){
+        setDownloadStatus(d.error||"Unable to update.");
         return;
       }
-      const d=await r.json().catch(()=>({}));
-      if(!r.ok)return;
       if(type==="like"){
         setLiked(Boolean(d.liked));
         setLikes(v=>Math.max(0,v+(d.liked?1:-1)));
       }else setSaved(Boolean(d.saved));
+    }catch{
+      setDownloadStatus("Network error. Try again.");
     }finally{
       setBusy(false);
     }
@@ -60,27 +61,22 @@ export default function WallpaperActions({
     setDownloadStatus("Preparing download…");
     try{
       const r=await fetch("/api/wallpapers/"+wallpaperId+"/download?device="+encodeURIComponent(downloadDevice));
-      const d=await r.json().catch(()=>({}));
       if(!r.ok){
-        if(r.status===401)router.push("/login?callbackUrl="+encodeURIComponent(window.location.pathname));
+        const d=await r.json().catch(()=>({}));
         setDownloadStatus(d.error||"Download failed.");
         return;
       }
-      if(!d.url){
-        setDownloadStatus("Download URL unavailable.");
-        return;
-      }
 
-      setDownloadProgress(8);
-      setDownloadStatus("Downloading…");
-
-      await new Promise<void>((resolve,reject)=>{
+      const total=Number(r.headers.get("content-length")||0);
+      const blob=await new Promise<Blob>((resolve,reject)=>{
         const xhr=new XMLHttpRequest();
-        xhr.open("GET",d.url,true);
+        xhr.open("GET","/api/wallpapers/"+wallpaperId+"/download?device="+encodeURIComponent(downloadDevice),true);
         xhr.responseType="blob";
         xhr.onprogress=event=>{
           if(event.lengthComputable){
             setDownloadProgress(Math.min(96,8+Math.round((event.loaded/event.total)*88)));
+          }else if(total>0){
+            setDownloadProgress(Math.min(96,8+Math.round((event.loaded/total)*88)));
           }else{
             setDownloadProgress(v=>Math.min(92,v+4));
           }
@@ -88,27 +84,27 @@ export default function WallpaperActions({
         xhr.onload=()=>{
           if(xhr.status>=200&&xhr.status<300){
             setDownloadProgress(100);
-            const blobUrl=URL.createObjectURL(xhr.response);
-            const anchor=document.createElement("a");
-            anchor.href=blobUrl;
-            anchor.download=String(d.filename||((title||"wallpaper").trim().replace(/[^a-z0-9]+/gi,"-").toLowerCase())+".webp");
-            document.body.appendChild(anchor);
-            anchor.click();
-            anchor.remove();
-            URL.revokeObjectURL(blobUrl);
-            setDownloadStatus("Download ready.");
-            resolve();
-          }else reject(new Error("Download request failed"));
+            resolve(xhr.response);
+          }else{
+            reject(new Error("Download request failed"));
+          }
         };
-        xhr.onerror=()=>reject(new Error("Cross-origin download unavailable"));
+        xhr.onerror=()=>reject(new Error("Download request failed"));
         xhr.onabort=()=>reject(new Error("Download cancelled"));
         xhr.send();
-      }).catch(()=>{
-        // Bunny CDN may not expose CORS for blob downloads. Preserve working direct download.
-        setDownloadProgress(100);
-        setDownloadStatus("Opening download…");
-        window.location.assign(d.url);
       });
+
+      const blobUrl=URL.createObjectURL(blob);
+      const disposition=r.headers.get("content-disposition")||"";
+      const match=disposition.match(/filename="?([^"]+)"?/i);
+      const anchor=document.createElement("a");
+      anchor.href=blobUrl;
+      anchor.download=match?.[1]||((title||"wallpaper").trim().replace(/[^a-z0-9]+/gi,"-").toLowerCase())+".webp";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(blobUrl);
+      setDownloadStatus("Download ready.");
     }catch{
       setDownloadStatus("Unable to download right now.");
     }finally{
@@ -137,27 +133,23 @@ export default function WallpaperActions({
       {authenticated?<>
         <button className="btn" onClick={()=>toggle("like")} disabled={busy}>{liked?"❤️":"♡"} {likes}</button>
         <button className="btn" onClick={()=>toggle("save")} disabled={busy}>{saved?"🔖 Saved":"🔖 Save"}</button>
+        <select
+          value={downloadDevice}
+          onChange={event=>setDownloadDevice(event.target.value)}
+          disabled={downloadBusy}
+          aria-label="Download device"
+          style={{padding:"10px 12px",borderRadius:12,border:"1px solid var(--line)",background:"#171c25",color:"white"}}
+        >
+          {availableDevices.map(device=><option value={device} key={device}>Download {DEVICE_LABELS[device]||device}</option>)}
+        </select>
+        <button className="btn btn-primary" onClick={download} disabled={downloadBusy}>
+          {downloadBusy?"Downloading…":"⬇ Download"}
+        </button>
       </>:null}
       <button className="btn" onClick={share}>↗ Share</button>
-
-      {authenticated?<>
-      <select
-        value={downloadDevice}
-        onChange={event=>setDownloadDevice(event.target.value)}
-        disabled={downloadBusy}
-        aria-label="Download device"
-        style={{padding:"10px 12px",borderRadius:12,border:"1px solid var(--line)",background:"#171c25",color:"white"}}
-      >
-        {availableDevices.map(device=><option value={device} key={device}>Download {DEVICE_LABELS[device]||device}</option>)}
-      </select>
-
-      <button className="btn btn-primary" onClick={download} disabled={downloadBusy}>
-        {downloadBusy?"Downloading…":"⬇ Download"}
-      </button>
-      </>:null}
     </div>
 
-    {!authenticated?<span className="muted" style={{fontSize:12}}>Share is available without login. Like, save and download require an active account.</span>:null}
+    {!authenticated?<span className="muted" style={{fontSize:12}}>Browsing and sharing work without login. Like, save and download require an active account.</span>:null}
 
     {downloadBusy||downloadStatus?<div className="card" style={{padding:12,display:"grid",gap:7}}>
       <div style={{display:"flex",justifyContent:"space-between",gap:12,fontSize:13}}>
