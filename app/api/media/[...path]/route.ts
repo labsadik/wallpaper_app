@@ -12,7 +12,7 @@ export async function GET(request:Request,{params}:{params:Promise<{path:string[
   const resolved=await params;
   const segments=(resolved.path||[]).filter(Boolean);
   const path="/"+segments.join("/");
-  const storagePath=path.replace(/^//,"");
+  const storagePath=path.replace(/^\/+/,"");
   const url=new URL(request.url);
   const expires=Number(url.searchParams.get("e")||0);
   const token=url.searchParams.get("s")||"";
