@@ -1,6 +1,5 @@
 import {NextResponse} from "next/server";
-import {getServerSession} from "next-auth";
-import {authOptions} from "@/lib/auth";
+import {getActiveSession} from "@/lib/admin";
 import {connectDB} from "@/lib/mongodb";
 import User from "@/models/User";
 import Wallpaper from "@/models/Wallpaper";
@@ -10,7 +9,7 @@ import {uploadToBunny} from "@/lib/bunny";
 export const runtime="nodejs";
 
 export async function POST(request:Request){
-  const session=await getServerSession(authOptions);
+  const session=await getActiveSession();
   if(!session?.user?.id) return NextResponse.json({error:"Unauthorized"},{status:401});
   await connectDB();
   const user=await User.findById(session.user.id).lean();
