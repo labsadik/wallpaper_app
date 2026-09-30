@@ -27,6 +27,8 @@ export default function PublisherUploadPage(){
   const [devices,setDevices]=useState<DeviceId[]>(["desktop","tablet","mobile"]);
   const [status,setStatus]=useState("");
   const [result,setResult]=useState<{id:string;category:string;devices:DeviceId[]}|null>(null);
+  const [progress,setProgress]=useState(0);
+  const [progressLabel,setProgressLabel]=useState("");
 
   useEffect(()=>{
     if(!file){
@@ -70,7 +72,9 @@ export default function PublisherUploadPage(){
       return;
     }
 
-    setStatus("Uploading and processing...");
+    setStatus("Uploading…");
+    setProgress(0);
+    setProgressLabel("Uploading image");
     setResult(null);
 
     const formData=new FormData();
@@ -80,21 +84,60 @@ export default function PublisherUploadPage(){
     formData.set("file",file);
 
     try{
-      const response=await fetch("/api/publisher/upload",{method:"POST",body:formData});
-      const data=await response.json().catch(()=>({}));
-      if(!response.ok){
-        setStatus(data.error||"Upload failed.");
+      const data=await new Promise<{wallpaperId:string;category:string;devices:string[]}|{error:string}>((resolve,reject)=>{
+        const xhr=new XMLHttpRequest();
+        xhr.open("POST","/api/publisher/upload",true);
+
+        let processingTimer:ReturnType<typeof setInterval>|undefined;
+        xhr.upload.onprogress=event=>{
+          if(event.lengthComputable){
+            setProgress(Math.min(75,Math.round((event.loaded/event.total)*75)));
+          }
+        };
+        xhr.upload.onload=()=>{
+          setProgress(76);
+          setProgressLabel("Processing and optimizing");
+          setStatus("Processing and optimizing…");
+          processingTimer=setInterval(()=>{
+            setProgress(current=>Math.min(94,current+1));
+          },450);
+        };
+        xhr.onload=()=>{
+          if(processingTimer)clearInterval(processingTimer);
+          let payload:{wallpaperId?:string;category?:string;devices?:string[];error?:string}={};
+          try{payload=JSON.parse(xhr.responseText||"{}");}catch{}
+          if(xhr.status>=200&&xhr.status<300&&payload.wallpaperId){
+            setProgress(100);
+            setProgressLabel("Complete");
+            resolve({
+              wallpaperId:payload.wallpaperId,
+              category:payload.category||category,
+              devices:Array.isArray(payload.devices)?payload.devices:[...devices]
+            });
+          }else{
+            reject(new Error(payload.error||"Upload failed."));
+          }
+        };
+        xhr.onerror=()=>{if(processingTimer)clearInterval(processingTimer);reject(new Error("Network error. Please try again."));};
+        xhr.onabort=()=>{if(processingTimer)clearInterval(processingTimer);reject(new Error("Upload cancelled."));};
+        xhr.send(formData);
+      });
+
+      if("error" in data){
+        setStatus(data.error);
         return;
       }
-
       setResult({
         id:String(data.wallpaperId),
         category:String(data.category||category),
-        devices:Array.isArray(data.devices)?data.devices as DeviceId[]:devices
+        devices:data.devices as DeviceId[]
       });
       setStatus("Upload submitted for review.");
-    }catch{
-      setStatus("Network error. Please try again.");
+      setProgressLabel("Complete");
+    }catch(error){
+      setStatus(error instanceof Error?error.message:"Upload failed.");
+      setProgress(0);
+      setProgressLabel("");
     }
   }
 
@@ -182,8 +225,18 @@ export default function PublisherUploadPage(){
           <span className="muted">✓ Format and integrity · ✓ Any resolution accepted · ✓ Quality warning for smaller sources · ✓ Duplicate detection · ✓ Optimization · ✓ Selected device targets saved</span>
         </div>
 
+        {progress>0?<div className="card" style={{padding:13,display:"grid",gap:7}}>
+          <div style={{display:"flex",justifyContent:"space-between",gap:12,fontSize:13}}>
+            <span>{progressLabel||"Working…"}</span>
+            <strong>{progress}%</strong>
+          </div>
+          <div style={{height:8,borderRadius:999,background:"#202633",overflow:"hidden"}}>
+            <div style={{height:"100%",width:progress+"%",background:"#fff",transition:"width .25s ease"}}/>
+          </div>
+        </div>:null}
+
         <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
-          <Button variant="primary" type="submit" disabled={!file||status==="Uploading and processing..."}>{status==="Uploading and processing..."?"Processing...":"Upload and process"}</Button>
+          <Button variant="primary" type="submit" disabled={!file||progress>0}>{progress>0&&progress<100?"Processing…":"Upload and process"}</Button>
           {status?<span className="muted">{status}</span>:null}
         </div>
 
