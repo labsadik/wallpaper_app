@@ -11,6 +11,8 @@ import WallpaperCard from "@/components/wallpaper-card";
 
 const STATUS_LABELS=[["processing","Processing"],["pending_review","Pending review"],["published","Published"]] as const;
 
+export const dynamic="force-dynamic";
+
 export default async function PublisherPage(){
   const session=await getActiveSession();
   if(!session) redirect("/login");
@@ -30,7 +32,7 @@ export default async function PublisherPage(){
       <div>
         <p className="muted" style={{margin:"0 0 6px",fontWeight:700}}>Publisher Studio</p>
         <h1 style={{fontSize:"clamp(34px,5vw,48px)",margin:0}}>Your wallpapers</h1>
-        <p className="muted" style={{maxWidth:720,margin:"10px 0 0"}}>Upload once. Preview, category, target devices, quality and optimized variants stay attached to each wallpaper.</p>
+        <p className="muted" style={{maxWidth:720,margin:"10px 0 0"}}>Upload once. Processing is automatic; every new wallpaper is scheduled to publish 20 seconds after processing completes.</p>
       </div>
       <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
         <Link href="/publisher/upload" className="btn btn-primary">Upload wallpaper</Link>
@@ -49,13 +51,13 @@ export default async function PublisherPage(){
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,marginBottom:14}}>
         <div>
           <h2 style={{fontSize:24,margin:0}}>Recent uploads</h2>
-          <p className="muted" style={{margin:"4px 0 0"}}>Category, status and target devices are shown on every item.</p>
+          <p className="muted" style={{margin:"4px 0 0"}}>Category, status, target devices and publishing controls are shown on every item.</p>
         </div>
       </div>
 
       {items.length===0
         ? <div className="card" style={{padding:28}}>
-            <h3 style={{margin:"0 0 8px",fontSize:20}}>No uploads yet</h3>
+            <h3 style={{margin:"0 0 8px",fontSize:20}}>No active uploads</h3>
             <p className="muted" style={{margin:"0 0 16px"}}>Start with an image, choose its category and select PC, Tablet or Mobile.</p>
             <Link href="/publisher/upload" className="btn btn-primary">Create first upload</Link>
           </div>
@@ -67,10 +69,10 @@ export default async function PublisherPage(){
                 category={item.category}
                 likes={item.likeCount}
                 downloads={item.downloadCount}
-                imageUrl={item.variants?.thumbnail?.key?bunnyPublicUrl(item.variants.thumbnail.key):undefined}
+                imageUrl={item.variants?.thumbnail?.key?signedMediaUrl(item.variants.thumbnail.key):undefined}
                 devices={item.devices||["desktop","tablet","mobile"]}
               />
-              <div style={{display:"flex",gap:7,flexWrap:"wrap",padding:"0 2px"}}>
+              <div style={{display:"flex",gap:7,flexWrap:"wrap",padding:"0 2px",alignItems:"center"}}>
                 <AutoPublishIndicator wallpaperId={String(item._id)} status={item.status} publishAt={item.publishAt?new Date(item.publishAt).toISOString():null}/>
                 <span className={item.qualityStatus==="pass"?"badge badge-selected":"badge"}>{item.qualityStatus}</span>
                 <PublisherWallpaperActions wallpaperId={String(item._id)} status={item.status}/>
@@ -81,8 +83,8 @@ export default async function PublisherPage(){
     </section>
 
     <div className="card" style={{padding:22,marginTop:28}}>
-      <h2 style={{fontSize:22,margin:0}}>Automatic processing</h2>
-      <p className="muted" style={{marginTop:8}}>Format and integrity → quality signal → duplicate check → optimization → selected device variants → automatic publish after 20 seconds. You can publish immediately or delete your own posts.</p>
+      <h2 style={{fontSize:22,margin:0}}>Automatic publishing</h2>
+      <p className="muted" style={{marginTop:8}}>New uploads enter Pending review with an automatic publish time 20 seconds later. The publisher screen shows the countdown and can publish immediately or delete the publisher’s own post. Server-side due checks also publish overdue pending items when the app is accessed.</p>
     </div>
   </main>;
 }
