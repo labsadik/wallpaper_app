@@ -13,8 +13,9 @@ async function main(){
 
   for(const row of rows){
     const variants=(row.variants||{}) as Record<string,{key?:string;width?:number;height?:number}|undefined>;
-    const devices=(row.devices||[]).filter((value):value is Device=>value==="desktop"||value==="tablet"||value==="mobile");
-    const selected=devices[0]||(["desktop","tablet","mobile"] as const).find(device=>Boolean(variants[device]?.key));
+    const rawDevices:unknown[]=Array.isArray(row.devices)?row.devices:[];
+    const devices=rawDevices.filter((value:unknown):value is Device=>value==="desktop"||value==="tablet"||value==="mobile");
+    const selected:Device|undefined=devices[0]??(["desktop","tablet","mobile"] as Device[]).find((device:Device)=>Boolean(variants[device]?.key));
 
     if(!selected||!variants[selected]?.key){
       skipped++;
