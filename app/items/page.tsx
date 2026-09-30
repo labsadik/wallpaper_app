@@ -10,7 +10,7 @@ export const dynamic="force-dynamic";
 
 type SearchParams={q?:string;category?:string;sort?:string};
 
-function escapeRegex(value:string){return value.replace(/[.*+?^{}()|[\\]\\]/g,"\\$&");}
+function escapeRegex(value:string){return value.replace(/[.*+?^${}()|[\\]\\]/g,"\\function escapeRegex(value:string){return value.replace(/[.*+?^{}()|[\\]\\]/g,"\\$&");}");}
 
 const SORTS=[
   ["newest","Newest"],
