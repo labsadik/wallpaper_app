@@ -151,16 +151,16 @@ export default function PublisherUploadPage(){
   return <PageShell
     eyebrow="Publisher Studio"
     title="Upload wallpaper"
-    description="Preview your image, choose a category and select the target devices. New uploads are saved as Pending review."
+    description="Choose an image by clicking the picker. Drag-and-drop has been disabled for uploads and previews."
   >
     <form onSubmit={submit} className="upload-layout">
       <section className="card" style={{padding:24,display:"grid",gap:20}}>
-        <label className="card" style={{minHeight:250,borderStyle:"dashed",display:"grid",placeItems:"center",padding:24,cursor:"pointer",background:"#0d1118",overflow:"hidden",position:"relative"}}>
+        <label className="card image-upload-surface" onDragEnter={event=>event.preventDefault()} onDragOver={event=>event.preventDefault()} onDrop={event=>event.preventDefault()} style={{minHeight:250,borderStyle:"dashed",display:"grid",placeItems:"center",padding:24,cursor:"pointer",background:"var(--input)",overflow:"hidden",position:"relative"}}>
           <input type="file" hidden accept="image/jpeg,image/png,image/webp,image/avif" onChange={onFileChange}/>
           {previewUrl
             ? <div style={{width:"100%"}}>
-                <div style={{aspectRatio:"16/9",borderRadius:14,overflow:"hidden",background:"#06090f"}}>
-                  <img src={previewUrl} alt="Selected wallpaper preview" style={{width:"100%",height:"100%",objectFit:"contain",display:"block"}}/>
+                <div style={{aspectRatio:"16/9",borderRadius:14,overflow:"hidden",background:"#f1f5f9"}}>
+                  <img className="protected-image" draggable={false} onDragStart={event=>event.preventDefault()} src={previewUrl} alt="Selected wallpaper preview" style={{width:"100%",height:"100%",objectFit:"contain",display:"block"}}/>
                 </div>
                 <div style={{display:"flex",justifyContent:"space-between",gap:12,marginTop:12,flexWrap:"wrap"}}>
                   <strong style={{fontSize:15,overflow:"hidden",textOverflow:"ellipsis"}}>{file?.name}</strong>
@@ -170,7 +170,7 @@ export default function PublisherUploadPage(){
             : <div style={{textAlign:"center"}}>
                 <div style={{fontSize:42,marginBottom:10}}>＋</div>
                 <strong style={{fontSize:20}}>Choose wallpaper image</strong>
-                <p className="muted" style={{margin:"8px 0 0"}}>JPG, PNG, WebP or AVIF · up to 25 MB</p>
+                <p className="muted" style={{margin:"8px 0 0"}}>JPG, PNG, WebP or AVIF · up to 25 MB · click to select</p>
               </div>
           }
         </label>
@@ -184,7 +184,7 @@ export default function PublisherUploadPage(){
             <select
               value={category}
               onChange={e=>setCategory(e.target.value)}
-              style={{padding:"12px 13px",borderRadius:12,border:"1px solid var(--line)",background:"#0d1118",color:"white",outline:"none",width:"100%"}}
+              className="theme-select"
             >
               {CATEGORIES.map(item=><option key={item} value={item}>{item}</option>)}
             </select>
@@ -227,7 +227,7 @@ export default function PublisherUploadPage(){
           </div>
         </div>
 
-        <div className="card" style={{padding:16,display:"grid",gap:9}}>
+        <div className="card info-card">
           <strong>Automatic checks</strong>
           <span className="muted">✓ Format and integrity · ✓ Any resolution accepted · ✓ Quality warning for smaller sources · ✓ Duplicate detection · ✓ Optimization · ✓ Selected device targets saved · ✓ Pending review workflow</span>
         </div>
@@ -237,8 +237,8 @@ export default function PublisherUploadPage(){
             <span>{progressLabel||"Working…"}</span>
             <strong>{progress}%</strong>
           </div>
-          <div style={{height:8,borderRadius:999,background:"#202633",overflow:"hidden"}}>
-            <div style={{height:"100%",width:progress+"%",background:"#fff",transition:"width .25s ease"}}/>
+          <div style={{height:8,borderRadius:999,background:"#e2e8f0",overflow:"hidden"}}>
+            <div style={{height:"100%",width:progress+"%",background:"#111827",transition:"width .25s ease"}}/>
           </div>
         </div>:null}
 
@@ -247,7 +247,7 @@ export default function PublisherUploadPage(){
           {status?<span className="muted">{status}</span>:null}
         </div>
 
-        {result?<div className="card" style={{padding:16,display:"grid",gap:10,borderColor:"#3a4352"}}>
+        {result?<div className="card result-card">
           <strong>Saved upload · Pending review</strong>
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
             <span className="badge">{result.category}</span>
@@ -285,13 +285,13 @@ export default function PublisherUploadPage(){
                   margin:"0 auto",
                   borderRadius:10,
                   overflow:"hidden",
-                  background:"#06090f",
+                  background:"#f1f5f9",
                   border:"1px solid var(--line)",
                   display:"grid",
                   placeItems:"center"
                 }}>
                   {previewUrl
-                    ? <img src={previewUrl} alt={device.label+" preview"} style={{width:"100%",height:"100%",objectFit:"contain",display:"block"}}/>
+                    ? <img className="protected-image" draggable={false} onDragStart={event=>event.preventDefault()} src={previewUrl} alt={device.label+" preview"} style={{width:"100%",height:"100%",objectFit:"contain",display:"block"}}/>
                     : <span className="muted" style={{fontSize:12}}>Image preview</span>
                   }
                 </div>
