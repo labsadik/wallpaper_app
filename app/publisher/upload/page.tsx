@@ -107,7 +107,7 @@ export default function PublisherUploadPage(){
         };
         xhr.onload=()=>{
           if(processingTimer)clearInterval(processingTimer);
-          let payload:{wallpaperId?:string;slug?:string;category?:string;devices?:string[];error?:string}={};
+          let payload:{wallpaperId?:string;slug?:string;category?:string;devices?:string[];publishAt?:string;error?:string}={};
           try{payload=JSON.parse(xhr.responseText||"{}");}catch{}
           if(xhr.status>=200&&xhr.status<300&&payload.wallpaperId&&payload.slug){
             setProgress(100);
