@@ -15,6 +15,7 @@ type AdminUser={
   suspensionReason?:string|null;
   banReason?:string|null;
   createdAt?:string|Date;
+  isVerified?:boolean;
 };
 
 const DURATIONS=[
@@ -67,6 +68,7 @@ export default function AdminUserTable({users:initialUsers,currentAdminId}:{user
             <p className="muted" style={{margin:"4px 0 0",overflowWrap:"anywhere"}}>{user.email}</p>
             <div style={{display:"flex",gap:7,flexWrap:"wrap",marginTop:10}}>
               <span className="badge">{user.role}</span>
+              {user.role==="publisher"?<span className={user.isVerified?"badge badge-verified":"badge"}>{user.isVerified?"✓ Verified":"Not verified"}</span>:null}
               <span className={user.status==="active"?"badge badge-selected":"badge"}>{user.status}</span>
               {user.suspensionUntil?<span className="badge">until {new Date(user.suspensionUntil).toLocaleString()}</span>:null}
             </div>
@@ -81,7 +83,7 @@ export default function AdminUserTable({users:initialUsers,currentAdminId}:{user
               value={user.role}
               disabled={busy===id||isSelf}
               onChange={event=>act(id,{action:"role",role:event.target.value})}
-              style={{padding:"10px 11px",borderRadius:10,border:"1px solid var(--line)",background:"#0d1118",color:"white"}}
+              style={{padding:"10px 11px",borderRadius:10,border:"1px solid var(--line)",background:"var(--input)",color:"var(--text)"}}
             >
               <option value="user">User</option>
               <option value="publisher">Publisher</option>
@@ -107,6 +109,7 @@ export default function AdminUserTable({users:initialUsers,currentAdminId}:{user
           </label>
 
           <div style={{display:"flex",alignItems:"end",gap:8,flexWrap:"wrap"}}>
+            {user.role==="publisher"?<button className="btn" disabled={busy===id} onClick={()=>act(id,{action:user.isVerified?"unverify":"verify"})}>{busy===id?"Saving…":user.isVerified?"Remove verification":"Verify publisher"}</button>:null}
             {user.status==="suspended"?<button className="btn" disabled={busy===id} onClick={()=>act(id,{action:"unsuspend"})}>{busy===id?"Saving…":"Unsuspend"}</button>:null}
             {user.status==="banned"
               ? <button className="btn" disabled={busy===id||isSelf} onClick={()=>act(id,{action:"unban"})}>{busy===id?"Saving…":"Unban"}</button>
