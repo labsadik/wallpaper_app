@@ -7,6 +7,9 @@ const DEVICE_LABELS:Record<string,string>={desktop:"PC",tablet:"Tablet",mobile:"
 export default function WallpaperActions({
   wallpaperId,
   initialLikes,
+  initialSaves=0,
+  initialDownloads=0,
+  initialShares=0,
   initialLiked=false,
   initialSaved=false,
   shareUrl,
@@ -16,6 +19,9 @@ export default function WallpaperActions({
 }:{
   wallpaperId:string;
   initialLikes:number;
+  initialSaves?:number;
+  initialDownloads?:number;
+  initialShares?:number;
   initialLiked?:boolean;
   initialSaved?:boolean;
   shareUrl:string;
@@ -24,10 +30,14 @@ export default function WallpaperActions({
   authenticated?:boolean;
 }){
   const [likes,setLikes]=useState(initialLikes);
+  const [saves,setSaves]=useState(initialSaves);
+  const [downloads,setDownloads]=useState(initialDownloads);
+  const [shares,setShares]=useState(initialShares);
   const [liked,setLiked]=useState(initialLiked);
   const [saved,setSaved]=useState(initialSaved);
   const [busy,setBusy]=useState(false);
   const [downloadBusy,setDownloadBusy]=useState(false);
+  const [shareBusy,setShareBusy]=useState(false);
   const [downloadProgress,setDownloadProgress]=useState(0);
   const [downloadStatus,setDownloadStatus]=useState("");
   const availableDevices=useMemo(()=>devices.length?devices:["desktop","tablet","mobile"],[devices]);
@@ -46,7 +56,10 @@ export default function WallpaperActions({
       if(type==="like"){
         setLiked(Boolean(d.liked));
         setLikes(v=>Math.max(0,v+(d.liked?1:-1)));
-      }else setSaved(Boolean(d.saved));
+      }else{
+        setSaved(Boolean(d.saved));
+        setSaves(v=>Math.max(0,v+(d.saved?1:-1)));
+      }
     }catch{
       setDownloadStatus("Network error. Try again.");
     }finally{
@@ -100,6 +113,7 @@ export default function WallpaperActions({
       anchor.click();
       anchor.remove();
       URL.revokeObjectURL(blobUrl);
+      setDownloads(v=>v+1);
       setDownloadStatus("Download ready.");
     }catch(error){
       setDownloadStatus(error instanceof Error&&error.message==="LOGIN_REQUIRED"
@@ -115,36 +129,56 @@ export default function WallpaperActions({
   }
 
   async function share(){
-    if(navigator.share){
-      await navigator.share({title:title||"Wallpaper",url:shareUrl}).catch(()=>{});
-      return;
-    }
-    if(navigator.clipboard){
-      await navigator.clipboard.writeText(shareUrl);
-      setDownloadStatus("Link copied.");
-      setTimeout(()=>setDownloadStatus(""),1400);
+    if(shareBusy)return;
+    setShareBusy(true);
+    try{
+      const url=new URL(shareUrl,window.location.origin).toString();
+      let shared=false;
+      if(navigator.share){
+        try{
+          await navigator.share({title:title||"Wallpaper",url});
+          shared=true;
+        }catch(error){
+          if(error instanceof DOMException&&error.name==="AbortError")return;
+        }
+      }else if(navigator.clipboard){
+        await navigator.clipboard.writeText(url);
+        setDownloadStatus("Link copied.");
+        shared=true;
+        setTimeout(()=>setDownloadStatus(""),1400);
+      }
+
+      if(shared){
+        const response=await fetch("/api/wallpapers/"+wallpaperId+"/share",{method:"POST"});
+        const data=await response.json().catch(()=>({}));
+        if(response.ok)setShares(Number(data.shareCount)||shares+1);
+      }
+    }catch{
+      setDownloadStatus("Unable to share right now.");
+    }finally{
+      setShareBusy(false);
     }
   }
 
   return <div style={{display:"grid",gap:12}}>
-    <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
+    <div className="wallpaper-action-bar">
       {authenticated?<>
         <button className="btn" onClick={()=>toggle("like")} disabled={busy}>{liked?"❤️":"♡"} {likes}</button>
-        <button className="btn" onClick={()=>toggle("save")} disabled={busy}>{saved?"🔖 Saved":"🔖 Save"}</button>
+        <button className="btn" onClick={()=>toggle("save")} disabled={busy}>{saved?"🔖":"🔖"} {saves}</button>
         <select
           value={downloadDevice}
           onChange={event=>setDownloadDevice(event.target.value)}
           disabled={downloadBusy}
           aria-label="Download device"
-          style={{padding:"10px 12px",borderRadius:12,border:"1px solid var(--line)",background:"var(--input)",color:"var(--text)"}}
+          className="theme-select"
         >
           {availableDevices.map(device=><option value={device} key={device}>Download {DEVICE_LABELS[device]||device}</option>)}
         </select>
         <button className="btn btn-primary" onClick={download} disabled={downloadBusy}>
-          {downloadBusy?"Downloading…":"⬇ Download"}
+          {downloadBusy?"Downloading…":"⬇ Download"} {downloads}
         </button>
       </>:null}
-      <button className="btn" onClick={share}>↗ Share</button>
+      <button className="btn" onClick={share} disabled={shareBusy}>↗ Share {shares}</button>
     </div>
 
     {!authenticated?<span className="muted" style={{fontSize:12}}>Browsing and sharing work without login. Like, save and download require an active account.</span>:null}
