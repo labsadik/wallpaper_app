@@ -37,7 +37,8 @@ async function main(){
 
     const csrfRes=await fetch(baseUrl+"/api/auth/csrf");
     const csrf=await csrfRes.json() as {csrfToken?:string};
-    const csrfCookie=csrfRes.headers.get("set-cookie")||"";
+    const csrfCookies=csrfRes.headers.getSetCookie?.()||[];
+    const csrfCookie=csrfCookies.map(value=>value.split(";",1)[0]).join("; ");
     if(!csrf.csrfToken)throw new Error("Could not obtain NextAuth CSRF token");
 
     const signIn=await fetch(baseUrl+"/api/auth/callback/credentials?redirect=false",{
