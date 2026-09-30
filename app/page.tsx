@@ -26,7 +26,7 @@ export default async function HomePage(){
           <h1>High-quality wallpapers, ready for every screen.</h1>
           <p>Explore polished wallpapers, share them instantly, and publish your own with automatic processing and 20-second publishing.</p>
           <div className="landing-actions">
-            <Link className="landing-primary" href="/wallpapers">Explore wallpapers</Link>
+            <Link className="landing-primary" href="/items">Explore wallpapers</Link>
             <Link className="landing-secondary" href="/register">Create account</Link>
           </div>
           <div className="landing-stat-row">
@@ -44,7 +44,7 @@ export default async function HomePage(){
             <h2>Published wallpapers</h2>
             <p>Every item is live from the database and can be opened, viewed and shared.</p>
           </div>
-          <Link className="landing-secondary" href="/wallpapers">View all</Link>
+          <Link className="landing-secondary" href="/items">View all</Link>
         </div>
 
         {items.length===0
