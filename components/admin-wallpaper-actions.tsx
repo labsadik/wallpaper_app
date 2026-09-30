@@ -8,7 +8,7 @@ export default function AdminWallpaperActions({wallpaperId,status}:{wallpaperId:
   const [busy,setBusy]=useState(false);
   const [message,setMessage]=useState("");
 
-  async function update(action:"remove"|"restore"){
+  async function update(action:"publish"|"remove"|"restore"){
     setBusy(true);
     setMessage("");
     try{
@@ -22,7 +22,13 @@ export default function AdminWallpaperActions({wallpaperId,status}:{wallpaperId:
         setMessage(data.error||"Unable to update wallpaper.");
         return;
       }
-      setMessage(action==="remove"?"Removed from public view.":"Moved back to pending review.");
+      setMessage(
+        action==="publish"
+          ?"Published. It is now visible in the public gallery and publisher view."
+          :action==="remove"
+            ?"Removed from public view."
+            :"Moved back to pending review."
+      );
       router.refresh();
     }catch{
       setMessage("Network error. Try again.");
@@ -31,9 +37,21 @@ export default function AdminWallpaperActions({wallpaperId,status}:{wallpaperId:
     }
   }
 
+  const action=status==="pending_review"
+    ?"publish"
+    :status==="archived"
+      ?"restore"
+      :"remove";
+
   return <div style={{display:"grid",gap:7}}>
-    <button className="btn" disabled={busy} onClick={()=>update(status==="archived"?"restore":"remove")}>
-      {busy?"Saving…":status==="archived"?"Restore for review":"Remove post"}
+    <button className="btn btn-primary" disabled={busy} onClick={()=>update(action)}>
+      {busy
+        ?"Saving…"
+        :action==="publish"
+          ?"Publish"
+          :action==="restore"
+            ?"Send to review"
+            :"Remove post"}
     </button>
     {message?<span className="muted" style={{fontSize:12}}>{message}</span>:null}
   </div>;
