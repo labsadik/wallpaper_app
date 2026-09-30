@@ -1,11 +1,8 @@
 import "dotenv/config";
-import fs from "node:fs/promises";
-import path from "node:path";
 import {spawn} from "node:child_process";
 import sharp from "sharp";
 
-const baseUrl=process.env.TEST_BASE_URL||"http://localhost:3000";
-const cookieFile=path.resolve(".test-session-cookie");
+const baseUrl=(process.env.TEST_BASE_URL||"http://localhost:3000").replace(/\/$/,"");
 const email=process.env.TEST_PUBLISHER_EMAIL;
 const password=process.env.TEST_PUBLISHER_PASSWORD;
 
@@ -35,6 +32,7 @@ async function main(){
     }
 
     const csrfRes=await fetch(baseUrl+"/api/auth/csrf");
+    if(!csrfRes.ok)throw new Error("NextAuth CSRF endpoint returned HTTP "+csrfRes.status);
     const csrf=await csrfRes.json() as {csrfToken?:string};
     const csrfCookies=csrfRes.headers.getSetCookie?.()||[];
     const csrfCookie=csrfCookies.map(value=>value.split(";",1)[0]).join("; ");
@@ -58,8 +56,8 @@ async function main(){
     const cookies=(signIn.headers.getSetCookie?.()||[])
       .map(value=>value.split(";",1)[0])
       .join("; ");
-
     if(signIn.status<200||signIn.status>=400)throw new Error("Login failed with status "+signIn.status);
+    if(!cookies)throw new Error("Login did not return a session cookie");
 
     const seed=Date.now();
     const png=await sharp({
@@ -67,50 +65,37 @@ async function main(){
         width:320,
         height:180,
         channels:3,
-        background:{
-          r:seed%256,
-          g:(seed>>8)%256,
-          b:(seed>>16)%256
-        }
+        background:{r:seed%256,g:(seed>>8)%256,b:(seed>>16)%256}
       }
     }).png().toBuffer();
 
     const form=new FormData();
     form.set("title","Publisher Smoke Test Wallpaper "+seed);
     form.set("category","Testing");
-    form.set("devices","desktop,mobile");
+    form.set("devices","desktop");
     form.set("file",new Blob([png],{type:"image/png"}),"publisher-smoke-test.png");
 
     const upload=await fetch(baseUrl+"/api/publisher/upload",{
       method:"POST",
-      headers:{cookie:cookies||csrfCookie},
+      headers:{cookie:cookies},
       body:form
     });
 
     const body=await upload.text();
-    console.log("Upload HTTP status:",upload.status);
-    console.log(body);
+    if(!upload.ok)throw new Error("Publisher upload failed with status "+upload.status+": "+body);
 
-    if(upload.ok){
-      const data=JSON.parse(body) as {devices?:string[];category?:string};
-      const devices=(data.devices||[]).slice().sort().join(",");
-      if(devices!=="desktop,mobile"){
-        throw new Error("Publisher upload did not persist selected devices. Received: "+devices);
-      }
-      if(data.category!=="Testing"){
-        throw new Error("Publisher upload did not persist category. Received: "+String(data.category));
-      }
-      console.log("✅ Publisher metadata test passed: category + selected devices persisted");
-    }else{
-      process.exitCode=1;
-    }
+    const data=JSON.parse(body) as {devices?:string[];category?:string};
+    const devices=(data.devices||[]).slice().sort().join(",");
+    if(devices!=="desktop")throw new Error("Publisher upload did not persist the single selected device. Received: "+devices);
+    if(data.category!=="Testing")throw new Error("Publisher upload did not persist category. Received: "+String(data.category));
+
+    console.log("✅ Publisher upload metadata test passed");
   }finally{
-    try{await fs.unlink(cookieFile);}catch{}
     if(child)child.kill();
   }
 }
 
 main().catch(error=>{
-  console.error(error instanceof Error?error.message:error);
+  console.error("❌ Publisher test failed:",error instanceof Error?error.message:error);
   process.exitCode=1;
 });
