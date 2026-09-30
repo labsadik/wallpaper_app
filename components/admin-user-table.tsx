@@ -101,7 +101,7 @@ export default function AdminUserTable({users:initialUsers,currentAdminId}:{user
                 if(duration)act(id,{action:"suspend",duration});
                 event.currentTarget.value="";
               }}
-              style={{padding:"10px 11px",borderRadius:10,border:"1px solid var(--line)",background:"#0d1118",color:"white"}}
+              style={{padding:"10px 11px",borderRadius:10,border:"1px solid var(--line)",background:"var(--input)",color:"var(--text)"}}
             >
               <option value="">Select duration…</option>
               {DURATIONS.map(([value,label])=><option key={value} value={value}>{label}</option>)}
