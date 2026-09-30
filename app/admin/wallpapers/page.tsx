@@ -1,6 +1,5 @@
 import Link from "next/link";
-import {getServerSession} from "next-auth";
-import {authOptions} from "@/lib/auth";
+import {getActiveSession} from "@/lib/admin";
 import {redirect} from "next/navigation";
 import {connectDB} from "@/lib/mongodb";
 import Wallpaper from "@/models/Wallpaper";
@@ -11,7 +10,7 @@ import {bunnyPublicUrl} from "@/lib/bunny";
 export const dynamic="force-dynamic";
 
 export default async function AdminWallpapersPage(){
-  const session=await getServerSession(authOptions);
+  const session=await getActiveSession();
   if(!session)redirect("/login");
   if(session.user.role!=="admin")redirect("/account");
 
