@@ -192,3 +192,10 @@ body:has(.landing-shell) header .btn{background:#f8fafc;color:#111827;border-col
   .landing-hero p{font-size:17px}
   .landing-grid{grid-template-columns:1fr}
 }
+
+/* Normalize legacy inline dark surfaces to the application light theme. */
+[style*="#0d1118"],[style*="#11151d"],[style*="#171c25"],[style*="#05070b"],[style*="#06090f"],[style*="#202633"]{
+  background:var(--soft)!important;
+  color:var(--text)!important;
+  border-color:var(--line)!important;
+}
