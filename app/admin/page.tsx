@@ -6,6 +6,7 @@ import User from "@/models/User";
 import Wallpaper from "@/models/Wallpaper";
 import Download from "@/models/Download";
 import PageShell from "@/components/page-shell";
+import {autoPublishDueWallpapers} from "@/lib/wallpaper-publish";
 
 export const dynamic="force-dynamic";
 
@@ -15,6 +16,7 @@ export default async function AdminPage(){
   if(session.user.role!=="admin")redirect("/account");
 
   await connectDB();
+  await autoPublishDueWallpapers();
 
   const [
     users,activeUsers,publishers,admins,published,pending,removed,downloads,recentUsers,recentPosts
