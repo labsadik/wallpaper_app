@@ -11,6 +11,7 @@ import {signedMediaUrl} from "@/lib/media";
 import WallpaperCard from "@/components/wallpaper-card";
 import VerifiedBadge from "@/components/verified-badge";
 import ProfileFollowButton from "@/components/profile-follow-button";
+import ProfileStats from "@/components/profile-stats";
 
 export const dynamic="force-dynamic";
 
@@ -77,15 +78,7 @@ export default async function PublicProfilePage({params}:Props){
           {user.role==="publisher"&&user.isVerified?<VerifiedBadge label="Verified publisher"/>:null}
         </div>
         <p className="public-profile-username">@{user.username}</p>
-        <div className="public-profile-stats">
-          <Link href={"/profile/"+user.username+"/followers"} className="public-profile-stat">
-            <strong>{followers}</strong><span>Followers</span>
-          </Link>
-          <Link href={"/profile/"+user.username+"/following"} className="public-profile-stat">
-            <strong>{followingCount}</strong><span>Following</span>
-          </Link>
-          <span className="public-profile-stat"><strong>{wallpapers.length}</strong><span>Wallpapers</span></span>
-        </div>
+        <ProfileStats username={user.username} followers={followers} following={followingCount} wallpapers={wallpapers.length}/>
         <div className="public-profile-actions">
           <ProfileFollowButton username={user.username} initialFollowing={Boolean(viewerFollowing)} isSelf={isSelf} authenticated={Boolean(session)}/>
         </div>
