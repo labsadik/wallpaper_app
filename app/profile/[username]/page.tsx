@@ -79,7 +79,7 @@ export default async function PublicProfilePage({params}:Props){
           <p className="muted" style={{margin:"0 0 4px",fontWeight:700}}>Published collection</p>
           <h2>Wallpapers by @{user.username}</h2>
         </div>
-        <Link className="btn" href="/wallpapers">Browse all wallpapers</Link>
+        <Link className="btn" href="/items">Browse all wallpapers</Link>
       </div>
 
       {wallpapers.length===0
