@@ -1,5 +1,6 @@
 import {signedMediaUrl,verifyMediaSignature} from "../lib/media";
 import {slugify} from "../lib/images";
+import {rateLimit} from "../lib/rate-limit";
 
 process.env.MEDIA_SIGNING_SECRET="test-secret-test-secret-test-secret-test-secret";
 
@@ -22,6 +23,11 @@ async function main(){
   const tampered=signature.slice(0,-1)+(signature.endsWith("0")?"1":"0");
   assert(!verifyMediaSignature(path,expires,tampered),"tampered media signature accepted");
   assert(!verifyMediaSignature(path,expires-120,signature),"expired media signature accepted");
+
+  const key="core-test-"+Date.now();
+  assert(rateLimit(key,2,1000).allowed,"first rate-limit request rejected");
+  assert(rateLimit(key,2,1000).allowed,"second rate-limit request rejected");
+  assert(!rateLimit(key,2,1000).allowed,"third rate-limit request was not rejected");
 
   console.log("✅ Core utility/security tests passed");
 }
