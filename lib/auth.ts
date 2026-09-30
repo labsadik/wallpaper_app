@@ -41,13 +41,14 @@ export const authOptions:NextAuthOptions={
   })],
   callbacks:{
     async jwt({token,user}){
-      if(user) token.role=user.role;
+      if(user){ token.role=user.role; token.status=user.status; }
       return token;
     },
     async session({session,token}){
       if(session.user){
         session.user.id=String(token.sub);
         session.user.role=(token.role??"user") as "user"|"publisher"|"admin";
+        session.user.status=(token.status??"active") as "active"|"suspended"|"banned";
         if(token.sub){
           try{
             await connectDB();
@@ -55,10 +56,13 @@ export const authOptions:NextAuthOptions={
             if(current?.status==="suspended" && current.suspensionUntil && new Date(current.suspensionUntil).getTime()<=Date.now()){
               await User.updateOne({_id:token.sub},{$set:{status:"active"},$unset:{suspensionUntil:1,suspensionReason:1}});
               session.user.role=current.role as "user"|"publisher"|"admin";
+              session.user.status="active";
             }else if(current?.status==="active"){
               session.user.role=current.role as "user"|"publisher"|"admin";
+              session.user.status="active";
             }else if(current){
               session.user.role="user";
+              session.user.status=current.status as "suspended"|"banned";
             }
           }catch{
             // Keep the signed token role as a fallback during a DB outage.
