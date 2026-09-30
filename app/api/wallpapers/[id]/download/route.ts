@@ -22,7 +22,8 @@ export async function GET(request:Request,{params}:{params:Promise<{id:string}>}
     if(!wallpaper) return NextResponse.json({error:"Wallpaper not found"},{status:404});
 
     const requestedDevice=new URL(request.url).searchParams.get("device");
-    const available=(wallpaper.devices?.length?wallpaper.devices:["desktop","tablet","mobile"]).filter((device):device is typeof VALID_DEVICES[number] =>
+    const rawAvailable=(wallpaper.devices?.length?wallpaper.devices:["desktop","tablet","mobile"]) as string[];
+    const available=rawAvailable.filter((device:string):device is typeof VALID_DEVICES[number] =>
       (VALID_DEVICES as readonly string[]).includes(device)
     );
     const device=(requestedDevice&&available.includes(requestedDevice as typeof VALID_DEVICES[number])
