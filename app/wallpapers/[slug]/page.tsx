@@ -80,7 +80,7 @@ export default async function WallpaperPage({params}:{params:Promise<{slug:strin
 
   const [session,publisher]=await Promise.all([
     getActiveSession(),
-    User.findById(w.publisherId).select("name username isVerified avatarKey").lean()
+    User.findById(w.publisherId).select("name username role isVerified avatarKey").lean()
   ]);
 
   const canInteract=w.status==="published";
