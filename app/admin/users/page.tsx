@@ -48,10 +48,10 @@ export default async function AdminUsersPage({searchParams}:{searchParams:Promis
 
     <form method="get" className="card" style={{padding:14,marginTop:20,display:"grid",gridTemplateColumns:"minmax(220px,1fr) 180px 180px auto",gap:10}}>
       <input name="q" defaultValue={q} placeholder="Search name or email…" style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"var(--input)",color:"var(--text)"}}/>
-      <select name="role" defaultValue={role} style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"#0d1118",color:"white"}}>
+      <select name="role" defaultValue={role} style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"var(--input)",color:"var(--text)"}}>
         <option value="">All roles</option><option value="user">User</option><option value="publisher">Publisher</option><option value="admin">Admin</option>
       </select>
-      <select name="status" defaultValue={status} style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"#0d1118",color:"white"}}>
+      <select name="status" defaultValue={status} style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"var(--input)",color:"var(--text)"}}>
         <option value="">All statuses</option><option value="active">Active</option><option value="suspended">Suspended</option><option value="banned">Banned</option>
       </select>
       <div style={{display:"flex",gap:8}}><button className="btn btn-primary" type="submit">Filter</button><Link className="btn" href="/admin/users">Reset</Link></div>
