@@ -26,7 +26,8 @@ const WallpaperSchema=new Schema({
   },
   likeCount:{type:Number,default:0,index:true},
   saveCount:{type:Number,default:0},
-  downloadCount:{type:Number,default:0,index:true}
+  downloadCount:{type:Number,default:0,index:true},
+  shareCount:{type:Number,default:0,index:true}
 },{timestamps:true});
 
 export type WallpaperDoc=InferSchemaType<typeof WallpaperSchema>;
