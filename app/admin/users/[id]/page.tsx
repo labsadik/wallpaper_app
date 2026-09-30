@@ -71,7 +71,7 @@ export default async function AdminUserProfile({params}:{params:Promise<{id:stri
         : <div style={{display:"grid",gap:14}}>
           {wallpapers.map(item=>{const device=getPreferredWallpaperDevice(item.devices);return <article className="card" key={String(item._id)} style={{padding:14}}>
             <div className="admin-post-row" style={{alignItems:"center"}}>
-              <Link href={"/wallpapers/"+item.slug} style={{display:"block"}}>
+              <Link href={"/items/"+item.slug} style={{display:"block"}}>
                 {item.variants?.[device]?.key
                   ? <Image src={signedMediaUrl(item.variants?.[device]?.key||"")} alt={item.title} width={440} height={275} sizes="(max-width: 760px) 100vw, 440px" unoptimized style={{width:"100%",aspectRatio:"16/10",objectFit:"cover",borderRadius:12,display:"block"}}/>
                   : <div style={{aspectRatio:"16/10",borderRadius:12,background:"#0d1118"}}/>
