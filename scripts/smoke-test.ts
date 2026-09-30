@@ -30,6 +30,11 @@ async function checkRoute(check:SmokeCheck){
 async function main(){
   for(const check of checks)await checkRoute(check);
 
+  const securityResponse=await fetch(baseUrl+"/login",{cache:"no-store"});
+  for(const header of ["x-content-type-options","x-frame-options","referrer-policy"]){
+    if(!securityResponse.headers.get(header))throw new Error("Missing security header: "+header);
+  }
+
   const healthResponse=await fetch(baseUrl+"/api/health"+(deep?"?deep=1":""),{cache:"no-store"});
   const health=await healthResponse.json() as {ok?:boolean;database?:string};
 
