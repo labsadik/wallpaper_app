@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import ShareButton from "@/components/share-button";
 
 const DEVICE_LABELS:Record<string,string>={desktop:"PC",tablet:"Tablet",mobile:"Mobile"};
 
@@ -28,7 +29,10 @@ export default function WallpaperCard({
     </Link>
     <div style={{padding:16}}>
       <Link href={"/wallpapers/"+slug}><h3 style={{margin:"0 0 9px",fontSize:18}}>{title}</h3></Link>
-      <div className="muted" style={{display:"flex",gap:14,fontSize:13}}><span>♥ {likes}</span><span>↓ {downloads}</span><span>↗ Share</span></div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+        <div className="muted" style={{display:"flex",gap:14,fontSize:13}}><span>♥ {likes}</span><span>↓ {downloads}</span></div>
+        <ShareButton title={title} url={(typeof window!=="undefined"?window.location.origin:"")+"/wallpapers/"+slug}/>
+      </div>
     </div>
   </article>;
 }
