@@ -11,6 +11,8 @@ const WallpaperSchema=new Schema({
   devices:{type:[String],enum:WALLPAPER_DEVICES,default:["desktop","tablet","mobile"],index:true},
   publisherId:{type:Schema.Types.ObjectId,ref:"User",index:true,required:true},
   status:{type:String,enum:["draft","processing","pending_review","published","rejected","archived"],default:"processing",index:true},
+  publishAt:{type:Date,index:true},
+  publishedAt:{type:Date,index:true},
   qualityStatus:{type:String,enum:["pending","pass","warning","fail"],default:"pending"},
   duplicateStatus:{type:String,enum:["pending","unique","possible_duplicate","duplicate"],default:"pending"},
   moderationReason:{type:String,trim:true,maxlength:500},
