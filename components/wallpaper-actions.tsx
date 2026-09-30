@@ -47,7 +47,7 @@ export default function WallpaperActions({
     if(busy)return;
     setBusy(true);
     try{
-      const r=await fetch("/api/items/"+wallpaperId+"/"+type,{method:"POST"});
+      const r=await fetch("/api/wallpapers/"+wallpaperId+"/"+type,{method:"POST"});
       const d=await r.json().catch(()=>({}));
       if(!r.ok){
         setDownloadStatus(d.error||"Unable to update.");
@@ -76,7 +76,7 @@ export default function WallpaperActions({
     try{
       const blob=await new Promise<{blob:Blob;filename:string}>((resolve,reject)=>{
         const xhr=new XMLHttpRequest();
-        xhr.open("GET","/api/items/"+wallpaperId+"/download?device="+encodeURIComponent(downloadDevice),true);
+        xhr.open("GET","/api/wallpapers/"+wallpaperId+"/download?device="+encodeURIComponent(downloadDevice),true);
         xhr.responseType="blob";
         xhr.onprogress=event=>{
           if(event.lengthComputable){
@@ -149,7 +149,7 @@ export default function WallpaperActions({
       }
 
       if(shared){
-        const response=await fetch("/api/items/"+wallpaperId+"/share",{method:"POST"});
+        const response=await fetch("/api/wallpapers/"+wallpaperId+"/share",{method:"POST"});
         const data=await response.json().catch(()=>({}));
         if(response.ok)setShares(Number(data.shareCount)||shares+1);
       }
