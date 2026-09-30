@@ -71,6 +71,7 @@ export default async function PublisherPage(){
                 downloads={item.downloadCount}
                 imageUrl={item.variants?.thumbnail?.key?signedMediaUrl(item.variants.thumbnail.key):undefined}
                 devices={item.devices||["desktop","tablet","mobile"]}
+                publishedAt={item.publishedAt?new Date(item.publishedAt).toISOString():null}
               />
               <div style={{display:"flex",gap:7,flexWrap:"wrap",padding:"0 2px",alignItems:"center"}}>
                 <AutoPublishIndicator wallpaperId={String(item._id)} status={item.status} publishAt={item.publishAt?new Date(item.publishAt).toISOString():null}/>
