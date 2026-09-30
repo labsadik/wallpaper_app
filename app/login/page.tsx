@@ -28,8 +28,8 @@ export default function LoginPage(){
   }
 
   return <main className="container" style={{padding:"64px 0 88px"}}>
-    <div className="auth-grid" style={{maxWidth:980,margin:"0 auto",display:"grid",gridTemplateColumns:"1fr 1fr",border:"1px solid var(--line)",borderRadius:22,overflow:"hidden",background:"var(--panel)"}}>
-      <section style={{padding:34,display:"flex",flexDirection:"column",justifyContent:"space-between",minHeight:520,background:"linear-gradient(145deg,#171d27,#0e1219)"}}>
+    <div className="auth-grid" className="auth-grid" style={{maxWidth:980,margin:"0 auto",display:"grid",gridTemplateColumns:"1fr 1fr",border:"1px solid var(--line)",borderRadius:22,overflow:"hidden"}}>
+      <section className="auth-hero">
         <div>
           <span className="badge">Wallpaper SaaS</span>
           <h1 style={{fontSize:"clamp(34px,5vw,54px)",lineHeight:1.02,margin:"22px 0 14px"}}>Welcome back.</h1>
@@ -40,7 +40,7 @@ export default function LoginPage(){
         </div>
       </section>
 
-      <section style={{padding:34,display:"grid",alignContent:"center"}}>
+      <section className="auth-panel">
         <div style={{maxWidth:420,width:"100%",margin:"0 auto"}}>
           <p className="muted" style={{margin:"0 0 6px",fontWeight:700}}>Account access</p>
           <h2 style={{fontSize:30,margin:"0 0 8px"}}>Sign in</h2>
@@ -49,7 +49,7 @@ export default function LoginPage(){
           <form onSubmit={submit} style={{display:"grid",gap:16,marginTop:26}}>
             <label style={{display:"grid",gap:8}}>
               <span style={{fontSize:13,fontWeight:700}}>Email</span>
-              <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" type="email" autoComplete="email" required style={{padding:"13px 14px",borderRadius:12,border:"1px solid var(--line)",background:"#0d1118",color:"white",outline:"none"}}/>
+              <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" type="email" autoComplete="email" required style={{padding:"13px 14px",borderRadius:12,border:"1px solid var(--line)",background:"var(--input)",color:"var(--text)",outline:"none"}}/>
             </label>
             <label style={{display:"grid",gap:8}}>
               <span style={{fontSize:13,fontWeight:700}}>Password</span>
