@@ -51,7 +51,7 @@ export default async function AdminWallpapersPage({searchParams}:{searchParams:P
     </div>
 
     <form method="get" className="card" style={{padding:14,marginTop:20,display:"grid",gridTemplateColumns:"minmax(220px,1fr) 180px 180px auto",gap:10}}>
-      <input name="q" defaultValue={q} placeholder="Search title or category…" style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"#0d1118",color:"white"}}/>
+      <input name="q" defaultValue={q} placeholder="Search title or category…" style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"var(--input)",color:"var(--text)"}}/>
       <select name="status" defaultValue={status} style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"#0d1118",color:"white"}}>
         <option value="">All statuses</option>
         <option value="pending_review">Pending review</option><option value="published">Published</option><option value="rejected">Rejected</option><option value="archived">Removed</option><option value="processing">Processing</option><option value="draft">Draft</option>
