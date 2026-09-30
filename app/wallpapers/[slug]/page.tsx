@@ -1,7 +1,6 @@
 import {notFound} from "next/navigation";
-import {getServerSession} from "next-auth";
-import {authOptions} from "@/lib/auth";
 import {connectDB} from "@/lib/mongodb";
+import {getActiveSession} from "@/lib/admin";
 import Wallpaper from "@/models/Wallpaper";
 import Like from "@/models/Like";
 import Save from "@/models/Save";
@@ -37,7 +36,7 @@ export default async function WallpaperPage({params}:{params:Promise<{slug:strin
   const w=await Wallpaper.findOne({slug,status:"published"}).lean();
   if(!w)notFound();
 
-  const session=await getServerSession(authOptions);
+  const session=await getActiveSession();
   const [liked,saved]=session?.user?.id
     ? await Promise.all([
         Like.exists({userId:session.user.id,wallpaperId:w._id}),
