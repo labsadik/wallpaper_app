@@ -49,13 +49,12 @@ async function main(){
         unset["variants."+key]=1;
       }
       delete unset["variants."+selected];
+      const set:Record<string,unknown>={devices:[selected]};
+      set["variants."+selected]=metadata;
 
       await Wallpaper.updateOne(
         {_id:row._id},
-        {
-          $set:{devices:[selected],[\`variants.\${selected}\`]:metadata},
-          $unset:unset
-        }
+        {$set:set,$unset:unset}
       );
 
       for(const key of oldKeys){
