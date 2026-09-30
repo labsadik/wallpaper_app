@@ -6,7 +6,7 @@ import Wallpaper from "@/models/Wallpaper";
 import {requireAdmin} from "@/lib/admin";
 
 const schema=z.object({
-  action:z.enum(["remove","restore"]),
+  action:z.enum(["publish","remove","restore"]),
   reason:z.string().trim().max(500).optional()
 });
 
@@ -25,12 +25,26 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
   const wallpaper=await Wallpaper.findById(id);
   if(!wallpaper)return NextResponse.json({error:"Wallpaper not found"},{status:404});
 
-  if(parsed.data.action==="remove"){
+  if(parsed.data.action==="publish"){
+    if(wallpaper.status!=="pending_review"){
+      return NextResponse.json({error:"Only wallpapers in pending review can be published."},{status:409});
+    }
+    wallpaper.status="published";
+    wallpaper.removedAt=undefined;
+    wallpaper.removedBy=undefined;
+    wallpaper.moderationReason=undefined;
+  }else if(parsed.data.action==="remove"){
+    if(wallpaper.status!=="published"&&wallpaper.status!=="pending_review"){
+      return NextResponse.json({error:"Only published or pending-review wallpapers can be removed."},{status:409});
+    }
     wallpaper.status="archived";
     wallpaper.removedAt=new Date();
     wallpaper.removedBy=new mongoose.Types.ObjectId(auth.session.user.id);
     wallpaper.moderationReason=parsed.data.reason||"Removed by administrator";
   }else{
+    if(wallpaper.status!=="archived"){
+      return NextResponse.json({error:"Only removed wallpapers can be sent back to review."},{status:409});
+    }
     wallpaper.status="pending_review";
     wallpaper.removedAt=undefined;
     wallpaper.removedBy=undefined;
