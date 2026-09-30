@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {notFound,redirect} from "next/navigation";
-import {getServerSession} from "next-auth";
-import {authOptions} from "@/lib/auth";
+import {getActiveSession} from "@/lib/admin";
 import {connectDB} from "@/lib/mongodb";
 import User from "@/models/User";
 import Wallpaper from "@/models/Wallpaper";
@@ -13,7 +12,7 @@ import AdminWallpaperActions from "@/components/admin-wallpaper-actions";
 export const dynamic="force-dynamic";
 
 export default async function AdminUserProfile({params}:{params:Promise<{id:string}>}){
-  const session=await getServerSession(authOptions);
+  const session=await getActiveSession();
   if(!session)redirect("/login");
   if(session.user.role!=="admin")redirect("/account");
 
