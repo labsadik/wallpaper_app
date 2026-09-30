@@ -2,6 +2,7 @@ import {notFound} from "next/navigation";
 import {connectDB} from "@/lib/mongodb";
 import {getActiveSession} from "@/lib/admin";
 import Wallpaper from "@/models/Wallpaper";
+import User from "@/models/User";
 import Like from "@/models/Like";
 import Save from "@/models/Save";
 import {signedMediaUrl} from "@/lib/media";
@@ -9,6 +10,7 @@ import {autoPublishDueWallpapers} from "@/lib/wallpaper-publish";
 import WallpaperActions from "@/components/wallpaper-actions";
 import WallpaperViewer from "@/components/wallpaper-viewer";
 import PublishedAt from "@/components/published-at";
+import VerifiedBadge from "@/components/verified-badge";
 import type {Metadata} from "next";
 
 const DEVICE_LABELS:Record<string,string>={desktop:"PC",tablet:"Tablet",mobile:"Mobile"};
@@ -36,16 +38,35 @@ export async function generateMetadata({params}:{params:Promise<{slug:string}>})
   const {slug}=await params;
   await connectDB();
   await autoPublishDueWallpapers();
+
   const w=await Wallpaper.findOne({slug,status:"published"}).lean();
   if(!w)return {};
-  const devices=w.devices?.length?w.devices:["desktop","tablet","mobile"];
-  const ogDevice=devices.includes("desktop")?"desktop":devices[0];
-  const ogVariant=w.variants?.[ogDevice as "desktop"|"tablet"|"mobile"]?.key;
+
+  const devices=w.devices?.length?w.devices:["desktop"];
+  const ogDevice=devices[0] as "desktop"|"tablet"|"mobile";
+  const ogVariant=w.variants?.[ogDevice]?.key;
   const og=ogVariant?signedMediaUrl(ogVariant,86400):undefined;
+  const base=process.env.NEXT_PUBLIC_APP_URL||"http://localhost:3000";
+
   return {
-    title:w.title,
-    description:"Download "+w.title+" wallpaper in high resolution.",
-    openGraph:{title:w.title,description:"High-resolution wallpaper",images:og?[{url:og}]:[]}
+    title:w.title+" Wallpaper",
+    description:"Download "+w.title+" wallpaper in high resolution. Available for "+(DEVICE_LABELS[ogDevice]||ogDevice)+".",
+    alternates:{canonical:base+"/wallpapers/"+w.slug},
+    keywords:[w.title,w.category,"wallpaper","HD wallpaper",DEVICE_LABELS[ogDevice]||ogDevice],
+    openGraph:{
+      type:"article",
+      title:w.title+" Wallpaper",
+      description:"High-resolution "+w.title+" wallpaper.",
+      url:base+"/wallpapers/"+w.slug,
+      publishedTime:w.publishedAt?new Date(w.publishedAt).toISOString():undefined,
+      images:og?[{url:og}]:[]
+    },
+    twitter:{
+      card:"summary_large_image",
+      title:w.title+" Wallpaper",
+      description:"High-resolution wallpaper.",
+      images:og?[og]:[]
+    }
   };
 }
 
@@ -57,7 +78,11 @@ export default async function WallpaperPage({params}:{params:Promise<{slug:strin
   const {wallpaper:w,privatePreview}=await findWallpaperForRequest(slug);
   if(!w)notFound();
 
-  const session=await getActiveSession();
+  const [session,publisher]=await Promise.all([
+    getActiveSession(),
+    User.findById(w.publisherId).select("name username isVerified avatarKey").lean()
+  ]);
+
   const canInteract=w.status==="published";
   const [liked,saved]=canInteract&&session?.user?.id
     ? await Promise.all([
@@ -66,34 +91,49 @@ export default async function WallpaperPage({params}:{params:Promise<{slug:strin
       ])
     : [false,false];
 
-  const devices=w.devices?.length?w.devices:["desktop","tablet","mobile"];
+  const devices=w.devices?.length?w.devices:["desktop"];
   const variants={
     desktop:w.variants?.desktop?.key?signedMediaUrl(w.variants.desktop.key):null,
     tablet:w.variants?.tablet?.key?signedMediaUrl(w.variants.tablet.key):null,
     mobile:w.variants?.mobile?.key?signedMediaUrl(w.variants.mobile.key):null
   };
   const shareUrl=(process.env.NEXT_PUBLIC_APP_URL||"http://localhost:3000")+"/wallpapers/"+w.slug;
+  const publisherAvatar=publisher?.avatarKey?signedMediaUrl(publisher.avatarKey):null;
 
-  return <main className="container" style={{padding:"40px 0 80px"}}>
-    {privatePreview?<div className="card" style={{padding:"12px 14px",marginBottom:14,borderColor:"#3a4352"}}>
+  return <main className="container wallpaper-detail-page">
+    {privatePreview?<div className="card private-preview-banner">
       <strong>Private publisher preview</strong>
-      <span className="muted" style={{display:"block",marginTop:4,fontSize:13}}>
-        This wallpaper is currently {w.status==="pending_review"?"pending review":w.status.replace("_"," ")} and is not visible in the public gallery.
-      </span>
+      <span className="muted">This wallpaper is currently {w.status==="pending_review"?"pending review":w.status.replace("_"," ")} and is not visible in the public gallery.</span>
     </div>:null}
 
-    <div className="card" style={{padding:14}}>
+    <div className="card wallpaper-detail-card">
       <WallpaperViewer title={w.title} devices={devices} variants={variants}/>
-      <div style={{padding:"8px 8px 10px"}}>
-        <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",marginBottom:10}}>
+
+      <div className="wallpaper-detail-body">
+        <div className="wallpaper-meta-row">
           <span className="badge">{w.category}</span>
           {devices.map((device:string)=><span className="badge badge-selected" key={device}>{DEVICE_LABELS[device]||device}</span>)}
           <span className="badge">{w.status}</span>
           <span className={w.qualityStatus==="pass"?"badge badge-selected":"badge"}>{w.qualityStatus}</span>
         </div>
-        <h1 style={{fontSize:"clamp(30px,5vw,42px)",lineHeight:1.05,margin:"0 0 8px",overflowWrap:"anywhere"}}>{w.title}</h1>
+
+        <div className="publisher-identity">
+          <div className="publisher-avatar">
+            {publisherAvatar?<img className="protected-image" draggable={false} src={publisherAvatar} alt="Publisher avatar"/>:<span>{(publisher?.name||"P").slice(0,1).toUpperCase()}</span>}
+          </div>
+          <div>
+            <div className="publisher-name-row">
+              <strong>{publisher?.name||"Publisher"}</strong>
+              {publisher?.role==="publisher"&&publisher?.isVerified?<VerifiedBadge/>:null}
+            </div>
+            <span className="muted">@{publisher?.username||"publisher"}</span>
+          </div>
+        </div>
+
+        <h1>{w.title}</h1>
         <p className="muted">{w.source?.width}×{w.source?.height} source · ❤️ {w.likeCount} · 🔖 {w.saveCount} · ⬇ {w.downloadCount}</p>
         <PublishedAt value={w.publishedAt?new Date(w.publishedAt).toISOString():null}/>
+
         {canInteract
           ? <div style={{marginTop:14}}>
               <WallpaperActions
