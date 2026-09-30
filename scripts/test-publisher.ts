@@ -78,6 +78,7 @@ async function main(){
     const form=new FormData();
     form.set("title","Publisher Smoke Test Wallpaper "+seed);
     form.set("category","Testing");
+    form.set("devices","desktop,mobile");
     form.set("file",new Blob([png],{type:"image/png"}),"publisher-smoke-test.png");
 
     const upload=await fetch(baseUrl+"/api/publisher/upload",{
@@ -90,7 +91,19 @@ async function main(){
     console.log("Upload HTTP status:",upload.status);
     console.log(body);
 
-    if(!upload.ok)process.exitCode=1;
+    if(upload.ok){
+      const data=JSON.parse(body) as {devices?:string[];category?:string};
+      const devices=(data.devices||[]).slice().sort().join(",");
+      if(devices!=="desktop,mobile"){
+        throw new Error("Publisher upload did not persist selected devices. Received: "+devices);
+      }
+      if(data.category!=="Testing"){
+        throw new Error("Publisher upload did not persist category. Received: "+String(data.category));
+      }
+      console.log("✅ Publisher metadata test passed: category + selected devices persisted");
+    }else{
+      process.exitCode=1;
+    }
   }finally{
     try{await fs.unlink(cookieFile);}catch{}
     if(child)child.kill();
