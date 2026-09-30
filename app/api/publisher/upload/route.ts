@@ -56,8 +56,6 @@ export async function POST(request:Request){
       await uploadToBunny(key,data,"image/webp");
       variantMeta[name]={key,sizeBytes:data.length,mimeType:"image/webp"};
     }
-    const sourceKey="wallpapers/original/"+base+"."+processed.analysis.format;
-    await uploadToBunny(sourceKey,buffer,file.type||"application/octet-stream");
     const slugBase=slugify(title)||"wallpaper";
     let slug=slugBase; let suffix=1;
     while(await Wallpaper.exists({slug})) slug=slugBase+"-"+suffix++;
