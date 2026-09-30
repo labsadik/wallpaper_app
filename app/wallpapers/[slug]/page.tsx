@@ -8,6 +8,7 @@ import {signedMediaUrl} from "@/lib/media";
 import {autoPublishDueWallpapers} from "@/lib/wallpaper-publish";
 import WallpaperActions from "@/components/wallpaper-actions";
 import WallpaperViewer from "@/components/wallpaper-viewer";
+import PublishedAt from "@/components/published-at";
 import type {Metadata} from "next";
 
 const DEVICE_LABELS:Record<string,string>={desktop:"PC",tablet:"Tablet",mobile:"Mobile"};
@@ -92,6 +93,7 @@ export default async function WallpaperPage({params}:{params:Promise<{slug:strin
         </div>
         <h1 style={{fontSize:"clamp(30px,5vw,42px)",lineHeight:1.05,margin:"0 0 8px",overflowWrap:"anywhere"}}>{w.title}</h1>
         <p className="muted">{w.source?.width}×{w.source?.height} source · ❤️ {w.likeCount} · 🔖 {w.saveCount} · ⬇ {w.downloadCount}</p>
+        <PublishedAt value={w.publishedAt?new Date(w.publishedAt).toISOString():null}/>
         {canInteract
           ? <div style={{marginTop:14}}>
               <WallpaperActions
