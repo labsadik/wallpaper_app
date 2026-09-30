@@ -16,16 +16,14 @@ function safeFilename(value:string){
   return value.replace(/[^a-z0-9]+/gi,"-").replace(/^-+|-+$/g,"").slice(0,80)||"wallpaper";
 }
 
+export const runtime="nodejs";
 export async function GET(request:Request,{params}:{params:Promise<{id:string}>}){
+  const session=await getActiveSession();
+  if(!session?.user?.id)return NextResponse.json({error:"Login required to download wallpapers."},{status:401});
+
   const {id}=await params;
   const deviceParam=new URL(request.url).searchParams.get("device")||"desktop";
   if(!isDevice(deviceParam))return NextResponse.json({error:"Invalid device."},{status:400});
-
-  const session=await getActiveSession();
-  if(!session?.user?.id)return NextResponse.json({error:"Login required to download wallpapers."},{status:401});
-  if(session.user.status!=="active"){
-    return NextResponse.json({error:"Account is not active."},{status:403});
-  }
 
   await connectDB();
   const wallpaper=await Wallpaper.findOne({_id:id,status:"published"}).lean();
@@ -37,15 +35,19 @@ export async function GET(request:Request,{params}:{params:Promise<{id:string}>}
   const key=wallpaper.variants?.[device]?.key;
   if(!key)return NextResponse.json({error:"That device version is not available."},{status:404});
 
-  const url=bunnySignedUrl(key,300);
-  await Wallpaper.findByIdAndUpdate(id,{$inc:{downloadCount:1}});
-  if(session?.user?.id){
-    await Download.create({userId:session.user.id,wallpaperId:wallpaper._id,device});
-  }
+  const sourceUrl=bunnySignedUrl(key,120);
+  const upstream=await fetch(sourceUrl,{cache:"no-store"});
+  if(!upstream.ok)return NextResponse.json({error:"Download source unavailable."},{status:502});
 
-  return NextResponse.json({
-    url,
-    device,
-    filename:safeFilename(wallpaper.title)+"-"+device+".webp"
-  });
+  await Wallpaper.findByIdAndUpdate(id,{$inc:{downloadCount:1}});
+  await Download.create({userId:session.user.id,wallpaperId:wallpaper._id,device});
+
+  const headers=new Headers();
+  headers.set("Content-Type",upstream.headers.get("content-type")||"image/webp");
+  headers.set("Content-Disposition",'attachment; filename="'+safeFilename(wallpaper.title)+"-"+device+'.webp"');
+  headers.set("Cache-Control","private, no-store");
+  headers.set("X-Content-Type-Options","nosniff");
+  const length=upstream.headers.get("content-length");
+  if(length)headers.set("Content-Length",length);
+  return new Response(upstream.body,{status:200,headers});
 }
