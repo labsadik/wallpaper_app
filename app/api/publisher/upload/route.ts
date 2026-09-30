@@ -5,6 +5,7 @@ import User from "@/models/User";
 import Wallpaper from "@/models/Wallpaper";
 import {analyzeAndOptimize,slugify} from "@/lib/images";
 import {uploadToBunny} from "@/lib/bunny";
+import {getAutoPublishAt} from "@/lib/wallpaper-publish";
 
 export const runtime="nodejs";
 
@@ -62,7 +63,7 @@ export async function POST(request:Request){
     while(await Wallpaper.exists({slug})) slug=slugBase+"-"+suffix++;
     const created=await Wallpaper.create({
       title:title.trim(),slug,category,publisherId:user._id,devices:selectedDevices,
-      status:"pending_review",qualityStatus:processed.analysis.qualityStatus,duplicateStatus:"unique",
+      status:"pending_review",publishAt:getAutoPublishAt(),qualityStatus:processed.analysis.qualityStatus,duplicateStatus:"unique",
       source:{width:processed.analysis.width,height:processed.analysis.height,sizeBytes:buffer.length,mimeType:file.type,sha256:processed.analysis.sha256},
       variants:{...variantMeta}
     });
@@ -71,7 +72,9 @@ export async function POST(request:Request){
       wallpaperId:String(created._id),
       slug:created.slug,
       category:created.category,
-      devices:created.devices
+      devices:created.devices,
+      status:created.status,
+      publishAt:created.publishAt
     },{status:201});
   }catch(error){
     const message=error instanceof Error?error.message:"Processing failed";
