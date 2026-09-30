@@ -53,7 +53,7 @@ export default async function WallpaperPage({params}:{params:Promise<{slug:strin
   const {wallpaper:w,privatePreview}=await findWallpaperForRequest(slug);
   if(!w)notFound();
 
-  const session=privatePreview?await getActiveSession():await getActiveSession();
+  const session=await getActiveSession();
   const canInteract=w.status==="published";
   const [liked,saved]=canInteract&&session?.user?.id
     ? await Promise.all([
