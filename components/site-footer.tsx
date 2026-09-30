@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+const COPYRIGHT_YEAR=new Date().getFullYear();
+
 export default function SiteFooter(){
   return <footer className="site-footer">
     <div className="container site-footer-grid">
@@ -14,7 +16,7 @@ export default function SiteFooter(){
       </div>
     </div>
     <div className="container site-footer-bottom">
-      <span>© {new Date().getFullYear()} Wallpaper</span>
+      <span>© {COPYRIGHT_YEAR} Wallpaper</span>
       <span>Secure media · Publisher profiles · Visual discovery</span>
     </div>
   </footer>;
