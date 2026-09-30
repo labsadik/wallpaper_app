@@ -1,6 +1,5 @@
 import Link from "next/link";
-import {getServerSession} from "next-auth";
-import {authOptions} from "@/lib/auth";
+import {getActiveSession} from "@/lib/admin";
 import {redirect} from "next/navigation";
 import {connectDB} from "@/lib/mongodb";
 import Wallpaper from "@/models/Wallpaper";
@@ -10,7 +9,7 @@ import WallpaperCard from "@/components/wallpaper-card";
 const STATUS_LABELS=[["processing","Processing"],["pending_review","Pending review"],["published","Published"]] as const;
 
 export default async function PublisherPage(){
-  const session=await getServerSession(authOptions);
+  const session=await getActiveSession();
   if(!session) redirect("/login");
   if(!["publisher","admin"].includes(session.user.role)) redirect("/account");
 
