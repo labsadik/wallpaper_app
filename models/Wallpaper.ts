@@ -8,7 +8,7 @@ const WallpaperSchema=new Schema({
   slug:{type:String,trim:true,unique:true,index:true,required:true},
   category:{type:String,trim:true,index:true,required:true},
   tags:{type:[String],default:[]},
-  devices:{type:[String],enum:WALLPAPER_DEVICES,default:["desktop","tablet","mobile"],index:true},
+  devices:{type:[String],enum:WALLPAPER_DEVICES,default:["desktop"],index:true},
   publisherId:{type:Schema.Types.ObjectId,ref:"User",index:true,required:true},
   status:{type:String,enum:["draft","processing","pending_review","published","rejected","archived"],default:"processing",index:true},
   publishAt:{type:Date,index:true},
@@ -22,8 +22,7 @@ const WallpaperSchema=new Schema({
   variants:{
     desktop:{key:String,width:Number,height:Number,sizeBytes:Number,mimeType:String},
     tablet:{key:String,width:Number,height:Number,sizeBytes:Number,mimeType:String},
-    mobile:{key:String,width:Number,height:Number,sizeBytes:Number,mimeType:String},
-    thumbnail:{key:String,width:Number,height:Number,sizeBytes:Number,mimeType:String}
+    mobile:{key:String,width:Number,height:Number,sizeBytes:Number,mimeType:String}
   },
   likeCount:{type:Number,default:0,index:true},
   saveCount:{type:Number,default:0},
