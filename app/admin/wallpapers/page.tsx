@@ -53,11 +53,11 @@ export default async function AdminWallpapersPage({searchParams}:{searchParams:P
 
     <form method="get" className="card" style={{padding:14,marginTop:20,display:"grid",gridTemplateColumns:"minmax(220px,1fr) 180px 180px auto",gap:10}}>
       <input name="q" defaultValue={q} placeholder="Search title or category…" style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"var(--input)",color:"var(--text)"}}/>
-      <select name="status" defaultValue={status} style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"#0d1118",color:"white"}}>
+      <select name="status" defaultValue={status} style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"var(--input)",color:"var(--text)"}}>
         <option value="">All statuses</option>
         <option value="pending_review">Pending review</option><option value="published">Published</option><option value="rejected">Rejected</option><option value="archived">Removed</option><option value="processing">Processing</option><option value="draft">Draft</option>
       </select>
-      <select name="category" defaultValue={category} style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"#0d1118",color:"white"}}>
+      <select name="category" defaultValue={category} style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"var(--input)",color:"var(--text)"}}>
         <option value="">All categories</option>
         {categories.sort().map(item=><option value={item} key={item}>{item}</option>)}
       </select>
@@ -74,7 +74,7 @@ export default async function AdminWallpapersPage({searchParams}:{searchParams:P
           return <article className="card" key={String(item._id)} style={{padding:14}}>
             <div className="admin-post-row">
               <div>
-                {item.variants?.[item.devices?.[0]||"desktop"]?.key
+                {item.variants?.[device]?.key
                   ? <Image src={signedMediaUrl(item.variants?.[device]?.key||"")} alt={item.title} width={460} height={290} sizes="(max-width: 760px) 100vw, 460px" unoptimized style={{display:"block",width:"100%",aspectRatio:"16/10",objectFit:"cover",borderRadius:12}}/>
                   : <div style={{aspectRatio:"16/10",borderRadius:12,background:"#0d1118"}}/>
                 }
