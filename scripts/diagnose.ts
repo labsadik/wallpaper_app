@@ -37,11 +37,16 @@ async function main(){
     }
   }
 
-  if(process.env.BUNNY_STORAGE_ZONE?.trim()){
-    if(/^\d+$/.test(process.env.BUNNY_STORAGE_ZONE.trim())){
-      console.warn("⚠️ Bunny Storage Zone looks numeric. The Storage API expects the Storage Zone name in the object URL.");
+  const bunnyZone=process.env.BUNNY_STORAGE_ZONE?.trim();
+  if(bunnyZone){
+    if(/^\d+$/.test(bunnyZone)){
+      failed=true;
+      fail("Bunny Storage Zone","must be the Storage Zone name, not the numeric Storage Zone ID");
+    }else if(!/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i.test(bunnyZone)){
+      failed=true;
+      fail("Bunny Storage Zone","contains invalid characters; use the Storage Zone name from Bunny FTP & API Access");
     }else{
-      ok("Bunny Storage Zone","looks like a zone name");
+      ok("Bunny Storage Zone","looks like a valid zone name");
     }
   }
 
@@ -75,7 +80,8 @@ async function main(){
       });
       if(!upload.ok){
         failed=true;
-        fail("Bunny Storage upload",String(upload.status));
+        const detail=(await upload.text()).slice(0,300).replace(/\s+/g," ").trim();
+        fail("Bunny Storage upload",detail?String(upload.status)+" — "+detail:String(upload.status));
       }else{
         ok("Bunny Storage upload");
         let delivered=false;
