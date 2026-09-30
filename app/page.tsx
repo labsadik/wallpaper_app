@@ -5,6 +5,7 @@ import Wallpaper from "@/models/Wallpaper";
 import {signedMediaUrl} from "@/lib/media";
 import {autoPublishDueWallpapers} from "@/lib/wallpaper-publish";
 import PublishedAt from "@/components/published-at";
+import {getPreferredWallpaperDevice} from "@/lib/wallpaper-devices";
 
 export const dynamic="force-dynamic";
 
@@ -52,13 +53,13 @@ export default async function HomePage(){
               <span>Upload a wallpaper from Publisher Studio and it will publish automatically 20 seconds after processing.</span>
             </div>
           : <div className="landing-grid">
-              {items.map(item=><Link key={String(item._id)} href={"/wallpapers/"+item.slug} className="landing-wallpaper-card">
+              {items.map(item=>{const device=getPreferredWallpaperDevice(item.devices);return <Link key={String(item._id)} href={"/wallpapers/"+item.slug} className="landing-wallpaper-card">
                 <div className="landing-image">
                   {item.variants?.[item.devices?.[0]||"desktop"]?.key
                     ? <Image
                         className="protected-image"
                         draggable={false}
-                        src={signedMediaUrl(item.variants?.[item.devices?.[0]||"desktop"]?.key||"")}
+                        src={signedMediaUrl(item.variants?.[device]?.key||"")}
                         alt={item.title}
                         fill
                         sizes="(max-width: 760px) 100vw, (max-width: 1100px) 50vw, 25vw"
@@ -76,7 +77,7 @@ export default async function HomePage(){
                   <PublishedAt value={item.publishedAt?new Date(item.publishedAt).toISOString():null}/>
                   <span>Open & share →</span>
                 </div>
-              </Link>)}
+              </Link>})}
             </div>}
       </section>
     </main>
