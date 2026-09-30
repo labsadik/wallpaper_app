@@ -20,25 +20,23 @@ if(publicRoutes){
   );
 }
 
-async function check(check:SmokeCheck){
+async function checkRoute(check:SmokeCheck){
   const response=await fetch(baseUrl+check.path,{redirect:"manual",cache:"no-store"});
   if(!check.expected.includes(response.status)){
     throw new Error(check.label+" returned HTTP "+response.status);
   }
-  return response;
 }
 
 async function main(){
-  for(const check of checks){
-    await check && await check;
-  }
-  const health=await (await fetch(baseUrl+"/api/health"+(deep?"?deep=1":""))).json() as {
-    ok?:boolean;
-    database?:string;
-  };
-  if(health.ok!==true)throw new Error("Health endpoint reported unhealthy state.");
+  for(const check of checks)await checkRoute(check);
+
+  const healthResponse=await fetch(baseUrl+"/api/health"+(deep?"?deep=1":""),{cache:"no-store"});
+  const health=await healthResponse.json() as {ok?:boolean;database?:string};
+
+  if(!healthResponse.ok||health.ok!==true)throw new Error("Health endpoint reported an unhealthy state.");
   if(deep&&health.database!=="ok")throw new Error("Deep health check could not reach MongoDB.");
-  console.log("✅ Smoke tests passed:",checks.length+(deep?1:0),"checks");
+
+  console.log("✅ Smoke tests passed:",checks.length+1,"checks");
 }
 
 main().catch(error=>{
