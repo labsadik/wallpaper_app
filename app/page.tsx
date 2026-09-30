@@ -13,66 +13,42 @@ export default async function HomePage(){
   await autoPublishDueWallpapers();
   const items=await Wallpaper.find({status:"published"})
     .sort({publishedAt:-1,createdAt:-1})
-    .limit(12)
+    .limit(18)
     .select("slug title devices variants")
     .lean();
 
-  return <div className="landing-shell">
-    <main>
-      <section className="landing-hero">
-        <div className="container">
-          <span className="landing-kicker">Wallpaper SaaS</span>
-          <h1>High-quality wallpapers, ready for every screen.</h1>
-          <p>Explore polished wallpapers, open any image for its full item page, and share or download from the secure detail view.</p>
-          <div className="landing-actions">
-            <Link className="landing-primary" href="/items">Explore all items</Link>
-            <Link className="landing-secondary" href="/register">Create account</Link>
-          </div>
+  return <main className="container landing-image-home">
+    {items.length===0
+      ? <div className="landing-empty">
+          <strong>No published items yet.</strong>
+          <span>Published wallpapers will appear here.</span>
         </div>
-      </section>
-
-      <section className="container landing-items">
-        <div className="landing-section-head">
-          <div>
-            <span className="landing-kicker">Latest</span>
-            <h2>Latest items</h2>
-          </div>
-          <Link className="landing-secondary" href="/items">View all</Link>
-        </div>
-
-        {items.length===0
-          ? <div className="landing-empty">
-              <strong>No published items yet.</strong>
-              <span>Published wallpapers will appear here.</span>
-            </div>
-          : <div className="landing-image-grid">
-              {items.map(item=>{
-                const device=getPreferredWallpaperDevice(item.devices);
-                const key=item.variants?.[device]?.key;
-                return <Link
-                  key={String(item._id)}
-                  href={"/wallpapers/"+item.slug}
-                  className="landing-image-only"
-                  aria-label={"Open "+item.title}
-                >
-                  <div className="landing-image">
-                    {key
-                      ? <Image
-                          className="protected-image"
-                          draggable={false}
-                          src={signedMediaUrl(key)}
-                          alt={item.title}
-                          fill
-                          sizes="(max-width: 760px) 100vw, (max-width: 1100px) 50vw, 33vw"
-                          unoptimized
-                          style={{objectFit:"cover"}}
-                        />
-                      : <span className="muted">Image unavailable</span>}
-                  </div>
-                </Link>;
-              })}
-            </div>}
-      </section>
-    </main>
-  </div>;
+      : <div className="landing-image-grid">
+          {items.map(item=>{
+            const device=getPreferredWallpaperDevice(item.devices);
+            const key=item.variants?.[device]?.key;
+            return <Link
+              key={String(item._id)}
+              href={"/wallpapers/"+item.slug}
+              className="landing-image-only"
+              aria-label={"Open "+item.title}
+            >
+              <div className="landing-image">
+                {key
+                  ? <Image
+                      className="protected-image"
+                      draggable={false}
+                      src={signedMediaUrl(key)}
+                      alt={item.title}
+                      fill
+                      sizes="(max-width: 760px) 100vw, (max-width: 1100px) 50vw, 33vw"
+                      unoptimized
+                      style={{objectFit:"cover"}}
+                    />
+                  : <span className="muted">Image unavailable</span>}
+              </div>
+            </Link>;
+          })}
+        </div>}
+  </main>;
 }
