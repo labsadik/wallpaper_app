@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {connectDB} from "@/lib/mongodb";
 import Wallpaper from "@/models/Wallpaper";
 import {signedMediaUrl} from "@/lib/media";
@@ -111,13 +112,16 @@ export default async function ItemsPage({searchParams}:{searchParams:Promise<Sea
               return <article className="pinterest-item-card" key={String(item._id)}>
                 <Link href={"/wallpapers/"+item.slug} className="pinterest-item-image">
                   {variant?.key
-                    ? <img
+                    ? <Image
                         className="protected-image"
                         src={signedMediaUrl(variant.key)}
                         alt={item.title}
                         width={width}
                         height={height}
+                        sizes="(max-width: 700px) 50vw, (max-width: 1100px) 33vw, 20vw"
+                        unoptimized
                         draggable={false}
+                        style={{display:"block",width:"100%",height:"auto"}}
                       />
                     : <div className="pinterest-image-placeholder"/>}
                   <span className="pinterest-device-chip">{DEVICE_LABELS[device]||device}</span>
