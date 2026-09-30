@@ -74,12 +74,15 @@ export default async function WallpapersPage({searchParams}:{searchParams:Promis
 
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap",marginBottom:20}}>
       <p className="muted" style={{margin:0}}>{wallpapers.length} wallpapers shown</p>
-      <label style={{display:"flex",alignItems:"center",gap:8,fontSize:13}}>
-        <span className="muted">Sort</span>
-        <select defaultValue={sort} onChange={event=>{window.location.href="/wallpapers?"+query({sort:event.target.value});}} style={{padding:"9px 11px",borderRadius:10,border:"1px solid var(--line)",background:"#0d1118",color:"white"}}>
+      <form method="get" style={{display:"flex",alignItems:"center",gap:8,fontSize:13}}>
+        {q?<input type="hidden" name="q" value={q}/>:null}
+        {category?<input type="hidden" name="category" value={category}/>:null}
+        <label className="muted" htmlFor="wallpaper-sort">Sort</label>
+        <select id="wallpaper-sort" name="sort" defaultValue={sort} style={{padding:"9px 11px",borderRadius:10,border:"1px solid var(--line)",background:"#0d1118",color:"white"}}>
           {SORTS.map(([value,label])=><option key={value} value={value}>{label}</option>)}
         </select>
-      </label>
+        <button className="btn" type="submit">Apply</button>
+      </form>
     </div>
 
     {wallpapers.length===0
