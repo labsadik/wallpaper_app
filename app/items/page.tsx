@@ -110,7 +110,7 @@ export default async function ItemsPage({searchParams}:{searchParams:Promise<Sea
               const width=Math.max(16,variant?.width||1600);
               const height=Math.max(16,variant?.height||900);
               return <article className="pinterest-item-card" key={String(item._id)}>
-                <Link href={"/wallpapers/"+item.slug} className="pinterest-item-image">
+                <Link href={"/items/"+item.slug} className="pinterest-item-image">
                   {variant?.key
                     ? <Image
                         className="protected-image"
@@ -127,7 +127,7 @@ export default async function ItemsPage({searchParams}:{searchParams:Promise<Sea
                   <span className="pinterest-device-chip">{DEVICE_LABELS[device]||device}</span>
                 </Link>
                 <div className="pinterest-item-meta">
-                  <Link href={"/wallpapers/"+item.slug} className="pinterest-item-title">{item.title}</Link>
+                  <Link href={"/items/"+item.slug} className="pinterest-item-title">{item.title}</Link>
                   <div className="pinterest-item-line">
                     <span>{item.likeCount||0} likes</span>
                     <span>{item.downloadCount||0} downloads</span>
