@@ -134,6 +134,10 @@ export default function PublisherUploadPage(){
       });
       setStatus("Upload submitted for review.");
       setProgressLabel("Complete");
+      setTimeout(()=>{
+        setProgress(0);
+        setProgressLabel("");
+      },1600);
     }catch(error){
       setStatus(error instanceof Error?error.message:"Upload failed.");
       setProgress(0);
