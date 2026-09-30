@@ -1,5 +1,6 @@
 "use client";
 import {useState} from "react";
+import {useRouter} from "next/navigation";
 
 export default function WallpaperActions({
   wallpaperId,
@@ -14,6 +15,7 @@ export default function WallpaperActions({
   initialSaved?:boolean;
   shareUrl:string
 }){
+  const router=useRouter();
   const [likes,setLikes]=useState(initialLikes);
   const [liked,setLiked]=useState(initialLiked);
   const [saved,setSaved]=useState(initialSaved);
@@ -26,7 +28,7 @@ export default function WallpaperActions({
     try{
       const r=await fetch("/api/wallpapers/"+wallpaperId+"/"+type,{method:"POST"});
       if(r.status===401){
-        window.location.href="/login?callbackUrl="+encodeURIComponent(window.location.pathname);
+        router.push("/login?callbackUrl="+encodeURIComponent(window.location.pathname));
         return;
       }
       const d=await r.json().catch(()=>({}));
