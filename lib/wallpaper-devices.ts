@@ -13,3 +13,8 @@ export const WALLPAPER_DEVICE_LABELS: Record<WallpaperDevice, string> = {
 };
 
 export const ALL_WALLPAPER_DEVICES: WallpaperDevice[] = ["desktop", "tablet", "mobile"];
+
+export function getPreferredWallpaperDevice(devices?:readonly string[]):WallpaperDevice{
+  const value=devices?.[0];
+  return value==="desktop"||value==="tablet"||value==="mobile"?value:"desktop";
+}
