@@ -17,8 +17,16 @@ function storageZone(){
   return zone;
 }
 
-function storageObjectUrl(path:string){
+function storageHostname(){
   const hostname=required("BUNNY_STORAGE_HOSTNAME").replace(/^https?:\/\//,"").replace(/\/$/,"");
+  if(!/^([a-z0-9-]+\.)?storage\.bunnycdn\.com$/i.test(hostname)){
+    throw new Error("BUNNY_STORAGE_HOSTNAME must be a Bunny Storage API hostname such as storage.bunnycdn.com or a regional *.storage.bunnycdn.com endpoint");
+  }
+  return hostname;
+}
+
+function storageObjectUrl(path:string){
+  const hostname=storageHostname();
   const zone=encodeURIComponent(storageZone());
   const cleanPath=path.replace(/^\/+/,"").split("/").map(encodeURIComponent).join("/");
   return "https://"+hostname+"/"+zone+"/"+cleanPath;
@@ -48,6 +56,9 @@ export async function uploadToBunny(path:string,body:Buffer,contentType:string){
   });
   if(!response.ok){
     const detail=(await response.text()).slice(0,500);
+    if(response.status===401){
+      throw new Error("Bunny upload failed (401): Unauthorized. Use the Storage Zone read/write Password from Bunny FTP & API Access, not the read-only password or account API key.");
+    }
     throw new Error("Bunny upload failed ("+response.status+"): "+detail);
   }
   return {url};
