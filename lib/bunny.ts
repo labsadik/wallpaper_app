@@ -7,7 +7,7 @@ export function bunnyConfigured(){return !!(storageZone&&storagePassword&&storag
 export async function uploadToBunny(path:string,body:Buffer,contentType:string){
   if(!bunnyConfigured()) throw new Error("Bunny Storage is not configured");
   const url="https://"+storageHostname+"/"+encodeURIComponent(storageZone!)+"/"+path.split("/").map(encodeURIComponent).join("/");
-  const response=await fetch(url,{method:"PUT",headers:{"AccessKey":storagePassword!,"Content-Type":contentType},body});
+  const response=await fetch(url,{method:"PUT",headers:{"AccessKey":storagePassword!,"Content-Type":contentType},body:body as unknown as BodyInit});
   if(!response.ok) throw new Error("Bunny upload failed: "+response.status+" "+await response.text());
 }
 
