@@ -1,9 +1,11 @@
 import {NextResponse} from "next/server";
+import mongoose from "mongoose";
 import {getActiveSession} from "@/lib/admin";
 import {connectDB} from "@/lib/mongodb";
 import Wallpaper from "@/models/Wallpaper";
 import Download from "@/models/Download";
 import {bunnySignedUrl} from "@/lib/bunny";
+import {getClientKey,rateLimit,rateLimitedResponse} from "@/lib/rate-limit";
 
 const ALLOWED_DEVICES=["desktop","tablet","mobile"] as const;
 type Device=typeof ALLOWED_DEVICES[number];
@@ -21,7 +23,14 @@ export async function GET(request:Request,{params}:{params:Promise<{id:string}>}
   const session=await getActiveSession();
   if(!session?.user?.id)return NextResponse.json({error:"Login required to download wallpapers."},{status:401});
 
+  const limiter=rateLimit("download:"+session.user.id+":"+getClientKey(request,"ip"),20,60*1000);
+  if(!limiter.allowed){
+    return NextResponse.json({error:"Download limit reached. Please try again later."},rateLimitedResponse(limiter.retryAfterSeconds));
+  }
+
   const {id}=await params;
+  if(!mongoose.isValidObjectId(id))return NextResponse.json({error:"Invalid wallpaper id."},{status:400});
+
   const deviceParam=new URL(request.url).searchParams.get("device")||"desktop";
   if(!isDevice(deviceParam))return NextResponse.json({error:"Invalid device."},{status:400});
 
