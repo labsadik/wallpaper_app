@@ -1,14 +1,14 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import {useMemo,useState} from "react";
+import {useState} from "react";
 
 const LABELS:Record<string,string>={desktop:"PC",tablet:"Tablet",mobile:"Mobile"};
 
 export default function WallpaperViewer({title,devices,variants}:{title:string;devices:string[];variants:Record<string,string|null>}){
   const available=devices.length?devices:["desktop","tablet","mobile"];
   const [device,setDevice]=useState(available[0]);
-  const image=useMemo(()=>variants[device]||variants[available[0]]||null,[device,variants,available]);
+  const image=variants[device]||variants[available[0]]||null;
   return <section style={{display:"grid",gap:12}}>
     <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
       {available.map(item=><button key={item} type="button" className={device===item?"btn btn-primary":"btn"} onClick={()=>setDevice(item)} aria-pressed={device===item}>
