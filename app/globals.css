@@ -272,3 +272,20 @@ body:has(.landing-shell) header .btn{background:#f8fafc;color:#111827;border-col
   .wallpaper-detail-page{padding-top:24px}
   .account-profile-card{align-items:flex-start}
 }
+
+.public-profile-page{padding:42px 0 82px}
+.public-profile-hero{display:flex;align-items:center;gap:22px;padding:24px;flex-wrap:wrap}
+.public-profile-avatar{width:112px;height:112px;flex:none;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#111827;color:#fff;font-size:38px;font-weight:900;box-shadow:0 0 0 5px #f1f5f9}
+.public-profile-avatar img{width:100%;height:100%;object-fit:cover}
+.public-profile-info{min-width:260px;flex:1}
+.public-profile-name-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.public-profile-name-row h1{margin:0;font-size:clamp(30px,5vw,48px);line-height:1.05;overflow-wrap:anywhere}
+.public-profile-username{margin:5px 0 0;color:#64748b;font-weight:700}
+.public-profile-badges{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.public-profile-section{margin-top:30px}
+.public-profile-section-head{display:flex;align-items:end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:18px}
+.public-profile-section-head h2{margin:0;font-size:28px}
+@media(max-width:640px){
+  .public-profile-hero{padding:18px}
+  .public-profile-avatar{width:88px;height:88px;font-size:30px}
+}
