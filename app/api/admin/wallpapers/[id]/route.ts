@@ -30,6 +30,8 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
       return NextResponse.json({error:"Only wallpapers in pending review can be published."},{status:409});
     }
     wallpaper.status="published";
+    wallpaper.publishedAt=new Date();
+    wallpaper.publishAt=undefined;
     wallpaper.removedAt=undefined;
     wallpaper.removedBy=undefined;
     wallpaper.moderationReason=undefined;
