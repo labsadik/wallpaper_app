@@ -32,7 +32,7 @@ export default async function PublisherPage(){
       <div>
         <p className="muted" style={{margin:"0 0 6px",fontWeight:700}}>Publisher Studio</p>
         <h1 style={{fontSize:"clamp(34px,5vw,48px)",margin:0}}>Your wallpapers</h1>
-        <p className="muted" style={{maxWidth:720,margin:"10px 0 0"}}>Upload once. Processing is automatic; every new wallpaper is scheduled to publish 20 seconds after processing completes.</p>
+        <p className="muted" style={{maxWidth:720,margin:"10px 0 0"}}>Upload once. Processing is automatic; every new wallpaper is scheduled 20 seconds after processing completes, with a background job finalizing due uploads.</p>
       </div>
       <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
         <Link href="/publisher/upload" className="btn btn-primary">Upload wallpaper</Link>
@@ -85,7 +85,7 @@ export default async function PublisherPage(){
 
     <div className="card" style={{padding:22,marginTop:28}}>
       <h2 style={{fontSize:22,margin:0}}>Automatic publishing</h2>
-      <p className="muted" style={{marginTop:8}}>New uploads enter Pending review with an automatic publish time 20 seconds later. The publisher screen shows the countdown and can publish immediately or delete the publisher’s own post. Server-side due checks also publish overdue pending items when the app is accessed.</p>
+      <p className="muted" style={{marginTop:8}}>New uploads enter Pending review with an automatic publish time 20 seconds later. The publisher screen shows the countdown and can publish immediately or delete the publisher’s own post. Server-side due checks run on normal requests, and the production cron also finalizes overdue pending items in the background.</p>
     </div>
   </main>;
 }

@@ -10,7 +10,8 @@ const checks:SmokeCheck[]=[
   {path:"/register",expected:[200],label:"register page"},
   {path:"/robots.txt",expected:[200],label:"robots.txt"},
   {path:"/wallpapers",expected:[308,301],label:"legacy gallery redirect"},
-  {path:"/wallpapers/example",expected:[308,301],label:"legacy wallpaper redirect"}
+  {path:"/wallpapers/example",expected:[308,301],label:"legacy wallpaper redirect"},
+  {path:"/api/cron/publish",expected:[401],label:"cron authentication"}
 ];
 
 if(publicRoutes){
@@ -48,3 +49,5 @@ main().catch(error=>{
   console.error("❌ Smoke test failed:",error instanceof Error?error.message:error);
   process.exitCode=1;
 });
+
+export {};

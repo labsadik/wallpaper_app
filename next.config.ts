@@ -34,6 +34,12 @@ const nextConfig:NextConfig={
     remotePatterns
   },
   poweredByHeader:false,
+  async redirects(){
+    return [
+      {source:"/wallpapers",destination:"/items",permanent:true},
+      {source:"/wallpapers/:slug",destination:"/items/:slug",permanent:true}
+    ];
+  },
   async headers(){
     return [{source:"/(.*)",headers:securityHeaders}];
   }
