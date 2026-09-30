@@ -1,13 +1,19 @@
+import Link from "next/link";
 import {getServerSession} from "next-auth";
 import {authOptions} from "@/lib/auth";
 import {redirect} from "next/navigation";
+import PageShell from "@/components/page-shell";
 
 export default async function AccountPage(){
   const session=await getServerSession(authOptions); if(!session) redirect("/login");
-  return <main className="container" style={{padding:"48px 0 80px"}}>
-    <h1 style={{fontSize:40}}>Account</h1>
-    <div className="card" style={{padding:22,marginTop:20}}>
-      <p><strong>{session.user?.name}</strong></p><p className="muted">{session.user?.email}</p><p className="muted">Role: {session.user?.role}</p>
+  const role=session.user.role;
+  return <PageShell eyebrow="Account" title={session.user.name||"Your account"} description={session.user.email||undefined}>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))",gap:16}}>
+      {[
+        ["Saved wallpapers","Your saved collection","/account/saves"],
+        ["Download history","Recently downloaded wallpapers","/account/downloads"],
+        [role==="admin"?"Admin console":role==="publisher"?"Publisher Studio":"Become a publisher",role==="user"?"Publishing access is managed by the platform.":"Manage your publishing tools",role==="user"?"/account":role==="admin"?"/admin":"/publisher"]
+      ].map(([title,desc,href])=><Link href={href} className="card" key={title} style={{padding:20}}><h2 style={{fontSize:20,margin:"0 0 8px"}}>{title}</h2><p className="muted" style={{margin:0}}>{desc}</p></Link>)}
     </div>
-  </main>;
+  </PageShell>;
 }
