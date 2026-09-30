@@ -54,7 +54,7 @@ export default async function HomePage(){
           : <div className="landing-grid">
               {items.map(item=><Link key={String(item._id)} href={"/wallpapers/"+item.slug} className="landing-wallpaper-card">
                 <div className="landing-image">
-                  {item.variants?.thumbnail?.key
+                  {item.variants?.[item.devices?.[0]||"desktop"]?.key
                     ? <Image
                         className="protected-image"
                         draggable={false}
