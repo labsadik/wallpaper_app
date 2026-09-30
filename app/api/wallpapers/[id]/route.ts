@@ -8,7 +8,7 @@ export async function GET(_request:Request,{params}:{params:Promise<{id:string}>
   const wallpaper=await Wallpaper.findOne({_id:id,status:"published"}).lean();
   if(!wallpaper) return NextResponse.json({error:"Wallpaper not found"},{status:404});
   return NextResponse.json({
-    id:String(wallpaper._id),title:wallpaper.title,slug:wallpaper.slug,category:wallpaper.category,tags:wallpaper.tags,
+    id:String(wallpaper._id),title:wallpaper.title,slug:wallpaper.slug,category:wallpaper.category,tags:wallpaper.tags,devices:wallpaper.devices?.length?wallpaper.devices:["desktop","tablet","mobile"],
     likes:wallpaper.likeCount,saves:wallpaper.saveCount,downloads:wallpaper.downloadCount,
     desktopUrl:wallpaper.variants?.desktop?.key?bunnyPublicUrl(wallpaper.variants.desktop.key):null,
     mobileUrl:wallpaper.variants?.mobile?.key?bunnyPublicUrl(wallpaper.variants.mobile.key):null
