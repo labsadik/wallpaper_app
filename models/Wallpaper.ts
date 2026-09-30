@@ -4,7 +4,7 @@ export const WALLPAPER_DEVICES=["desktop","tablet","mobile"] as const;
 export type WallpaperDevice=typeof WALLPAPER_DEVICES[number];
 
 const WallpaperSchema=new Schema({
-  title:{type:String,trim:true,required:true,maxlength:160},
+  title:{type:String,trim:true,required:true,maxlength:160,index:true},
   slug:{type:String,trim:true,unique:true,index:true,required:true},
   category:{type:String,trim:true,index:true,required:true},
   tags:{type:[String],default:[]},
@@ -13,6 +13,9 @@ const WallpaperSchema=new Schema({
   status:{type:String,enum:["draft","processing","pending_review","published","rejected","archived"],default:"processing",index:true},
   qualityStatus:{type:String,enum:["pending","pass","warning","fail"],default:"pending"},
   duplicateStatus:{type:String,enum:["pending","unique","possible_duplicate","duplicate"],default:"pending"},
+  moderationReason:{type:String,trim:true,maxlength:500},
+  removedAt:{type:Date,index:true},
+  removedBy:{type:Schema.Types.ObjectId,ref:"User"},
   source:{width:Number,height:Number,sizeBytes:Number,mimeType:String,sha256:String,phash:String},
   variants:{
     desktop:{key:String,width:Number,height:Number,sizeBytes:Number,mimeType:String},
