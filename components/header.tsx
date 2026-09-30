@@ -19,7 +19,7 @@ export default function Header({session}:{session:Session|null}){
         {role==="admin"?<Link href="/admin" className="nav-link">Admin</Link>:null}
         {session
           ? <div className="nav-account">
-              <Link href="/account" className="account-chip" title={session.user?.email||displayName}>
+              <Link href={session.user.username?"/profile/"+session.user.username:"/account"} className="account-chip" title={session.user?.email||displayName}>
                 <span className="account-avatar">{avatarUrl?<Image src={avatarUrl} alt="" width={28} height={28} draggable={false} className="protected-image"/>:displayName.slice(0,1).toUpperCase()}</span>
                 <span className="account-name">{displayName}</span>
                 {role==="publisher"&&session.user.isVerified?<VerifiedBadge/>:null}
