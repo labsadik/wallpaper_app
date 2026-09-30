@@ -26,7 +26,7 @@ export default async function AdminUsersPage({searchParams}:{searchParams:Promis
   if(q)filter.$or=[{name:{$regex:q,$options:"i"}},{email:{$regex:q,$options:"i"}}];
 
   const users=await User.find(filter)
-    .select("name email role status suspensionUntil suspensionReason banReason createdAt")
+    .select("name username email role status isVerified suspensionUntil suspensionReason banReason createdAt")
     .sort({createdAt:-1})
     .limit(100)
     .lean();
@@ -69,6 +69,7 @@ export default async function AdminUsersPage({searchParams}:{searchParams:Promis
         email:user.email,
         role:user.role as "user"|"publisher"|"admin",
         status:user.status as "active"|"suspended"|"banned",
+        isVerified:Boolean(user.isVerified),
         suspensionUntil:user.suspensionUntil?new Date(user.suspensionUntil):null,
         suspensionReason:user.suspensionReason,
         banReason:user.banReason,
