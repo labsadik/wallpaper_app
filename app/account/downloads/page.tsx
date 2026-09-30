@@ -34,7 +34,7 @@ export default async function DownloadHistoryPage(){
       likes:w.likeCount||0,
       downloads:w.downloadCount||0,
       imageUrl:w.variants?.[w.devices?.[0]||"desktop"]?.key?signedMediaUrl(w.variants?.[w.devices?.[0]||"desktop"]?.key):undefined,
-      devices:w.devices||["desktop","tablet","mobile"],
+      devices:w.devices||["desktop"],
       publishedAt:w.publishedAt?new Date(w.publishedAt).toISOString():null
     };
   }).filter(Boolean);
