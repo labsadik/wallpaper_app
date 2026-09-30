@@ -8,11 +8,16 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "test": "npm run test:core && npm run test:image-processing",
+    "test:core": "tsx scripts/test-core.ts",
+    "test:image-processing": "tsx scripts/test-image-processing.ts",
+    "test:smoke": "tsx scripts/smoke-test.ts",
+    "test:load": "tsx scripts/load-test.ts",
+    "test:all": "npm run typecheck && npm test && npm run lint && npm run build",
     "make-admin": "tsx scripts/make-admin.ts",
     "test-publisher": "tsx scripts/test-publisher.ts",
     "diagnose": "tsx scripts/diagnose.ts",
-    "test-image-processing": "tsx scripts/test-image-processing.ts",
-    "migrate:bunny-wallpapers": "tsx scripts/migrate-bunny-wallpaper-storage.ts",
+    "migrate:bunny-wallpapers": "tsx scripts/migrate-bunny-wallpapers.ts",
     "migrate:user-profiles": "tsx scripts/migrate-user-profiles.ts"
   },
   "dependencies": {
