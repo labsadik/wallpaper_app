@@ -59,24 +59,15 @@ export default function WallpaperActions({
     setDownloadBusy(true);
     setDownloadProgress(4);
     setDownloadStatus("Preparing download…");
-    try{
-      const r=await fetch("/api/wallpapers/"+wallpaperId+"/download?device="+encodeURIComponent(downloadDevice));
-      if(!r.ok){
-        const d=await r.json().catch(()=>({}));
-        setDownloadStatus(d.error||"Download failed.");
-        return;
-      }
 
-      const total=Number(r.headers.get("content-length")||0);
-      const blob=await new Promise<Blob>((resolve,reject)=>{
+    try{
+      const blob=await new Promise<{blob:Blob;filename:string}>((resolve,reject)=>{
         const xhr=new XMLHttpRequest();
         xhr.open("GET","/api/wallpapers/"+wallpaperId+"/download?device="+encodeURIComponent(downloadDevice),true);
         xhr.responseType="blob";
         xhr.onprogress=event=>{
           if(event.lengthComputable){
             setDownloadProgress(Math.min(96,8+Math.round((event.loaded/event.total)*88)));
-          }else if(total>0){
-            setDownloadProgress(Math.min(96,8+Math.round((event.loaded/total)*88)));
           }else{
             setDownloadProgress(v=>Math.min(92,v+4));
           }
@@ -84,7 +75,14 @@ export default function WallpaperActions({
         xhr.onload=()=>{
           if(xhr.status>=200&&xhr.status<300){
             setDownloadProgress(100);
-            resolve(xhr.response);
+            const disposition=xhr.getResponseHeader("content-disposition")||"";
+            const match=disposition.match(/filename="?([^"]+)"?/i);
+            resolve({
+              blob:xhr.response,
+              filename:match?.[1]||((title||"wallpaper").trim().replace(/[^a-z0-9]+/gi,"-").toLowerCase())+".webp"
+            });
+          }else if(xhr.status===401){
+            reject(new Error("LOGIN_REQUIRED"));
           }else{
             reject(new Error("Download request failed"));
           }
@@ -94,19 +92,19 @@ export default function WallpaperActions({
         xhr.send();
       });
 
-      const blobUrl=URL.createObjectURL(blob);
-      const disposition=r.headers.get("content-disposition")||"";
-      const match=disposition.match(/filename="?([^"]+)"?/i);
+      const blobUrl=URL.createObjectURL(blob.blob);
       const anchor=document.createElement("a");
       anchor.href=blobUrl;
-      anchor.download=match?.[1]||((title||"wallpaper").trim().replace(/[^a-z0-9]+/gi,"-").toLowerCase())+".webp";
+      anchor.download=blob.filename;
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
       URL.revokeObjectURL(blobUrl);
       setDownloadStatus("Download ready.");
-    }catch{
-      setDownloadStatus("Unable to download right now.");
+    }catch(error){
+      setDownloadStatus(error instanceof Error&&error.message==="LOGIN_REQUIRED"
+        ?"Login required to download."
+        :"Unable to download right now.");
     }finally{
       setTimeout(()=>{
         setDownloadBusy(false);
