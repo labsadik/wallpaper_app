@@ -7,6 +7,7 @@ import Wallpaper from "@/models/Wallpaper";
 import AdminWallpaperActions from "@/components/admin-wallpaper-actions";
 import {signedMediaUrl} from "@/lib/media";
 import AdminBulkPublish from "@/components/admin-bulk-publish";
+import PublishedAt from "@/components/published-at";
 
 export const dynamic="force-dynamic";
 
@@ -86,6 +87,7 @@ export default async function AdminWallpapersPage({searchParams}:{searchParams:P
                 </div>
                 <p className="muted" style={{fontSize:12,margin:"7px 0 0",overflowWrap:"anywhere"}}>Publisher: {publisher?.name||"Unknown"} · {publisher?.email||""}</p>
                 <p className="muted" style={{fontSize:12,margin:"4px 0 0"}}>{item.likeCount||0} likes · {item.saveCount||0} saves · {item.downloadCount||0} downloads</p>
+                <PublishedAt value={item.publishedAt?new Date(item.publishedAt).toISOString():null}/>
                 {item.moderationReason?<p className="muted" style={{fontSize:12,margin:"6px 0 0"}}>{item.moderationReason}</p>:null}
               </div>
               <AdminWallpaperActions wallpaperId={String(item._id)} status={item.status}/>
