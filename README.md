@@ -1,54 +1,110 @@
 # Wallpaper SaaS
 
-Production-oriented foundation for a wallpaper platform.
+Production-ready wallpaper platform built with Next.js, MongoDB, Bunny Storage/CDN and Vercel.
 
 ## Stack
 
-- Next.js 16 + TypeScript
-- Tailwind CSS
+- Next.js 16 App Router + TypeScript
+- React 19
 - MongoDB Atlas + Mongoose
-- NextAuth.js
-- Sharp
+- NextAuth credentials authentication
+- Sharp image processing
 - Bunny Storage + Bunny CDN
 - Vercel
 
-## Roles
+## Product routes
 
-- user
-- publisher
-- admin
+- \`/\` — landing page and latest visual collection
+- \`/items\` — searchable Pinterest-style wallpaper feed
+- \`/items/[slug]\` — public wallpaper detail page
+- \`/profile/[username]\` — public publisher/member profile
+- \`/publisher\` — publisher workspace
+- \`/admin\` — administration
+- \`/account\` — account, saved items and download history
 
-## Current foundation
+Legacy public wallpaper URLs under \`/wallpapers/*\` permanently redirect to \`/items/*\`.
 
-- User registration and credentials login
-- Role-aware account, publisher and admin routes
-- MongoDB connection and core models
-- Wallpaper metadata model
-- Like/save/download models with unique like/save constraints
-- Environment template
-- Base responsive UI
+## Media architecture
+
+MongoDB stores metadata only. Bunny Storage holds optimized WebP assets. Public media is delivered through short-lived application-signed URLs and server-side Bunny token URLs; Bunny management credentials never go to the browser.
+
+Each upload selects exactly one target device:
+
+- PC → \`feature_wallpapers/pc/*.webp\`
+- Tablet → \`feature_wallpapers/tab/*.webp\`
+- Mobile → \`feature_wallpapers/mobile/*.webp\`
+
+There is no thumbnail/original storage requirement in the current flow.
 
 ## Local setup
 
-1. Copy .env.example to .env.local.
-2. Fill MongoDB and auth variables.
-3. Run npm install.
-4. Run npm run dev.
-5. Open http://localhost:3000.
+1. Copy \`.env.example\` to \`.env.local\`.
+2. Fill MongoDB, NextAuth and Bunny values.
+3. Install dependencies with \`npm ci\`.
+4. Run \`npm run diagnose\` to validate integrations.
+5. Run \`npm run dev\`.
+6. Open \`http://localhost:3000\`.
 
-## Storage rule
+## Verification and release tests
 
-MongoDB stores application metadata. Bunny Storage stores image assets. Bunny CDN serves optimized assets. Never expose Bunny management credentials or MongoDB credentials to the browser.
+Static/core checks:
 
-## Next implementation stage
+\`\`\`bash
+npm run typecheck
+npm test
+npm run lint
+npm run build
+\`\`\`
 
-- Bunny secure upload/download integration
-- Sharp processing pipeline
-- automatic quality + duplicate pipeline
-- device variants
-- publisher upload UI
-- admin review
-- like/save/share/download APIs
-- public MongoDB-backed gallery
-- SEO metadata + sitemap
-- rate limiting, audit logging and observability
+Or run the static release gate in one command:
+
+\`\`\`bash
+npm run test:all
+\`\`\`
+
+Production-server smoke test:
+
+\`\`\`bash
+npm run build
+npm run start
+TEST_BASE_URL=http://localhost:3000 npm run test:smoke
+\`\`\`
+
+For a DB-backed smoke check:
+
+\`\`\`text
+SMOKE_DEEP=1 SMOKE_PUBLIC_ROUTES=1 TEST_BASE_URL=http://localhost:3000 npm run test:smoke
+\`\`\`
+
+Baseline load test:
+
+\`\`\`text
+TEST_BASE_URL=http://localhost:3000 LOAD_TEST_REQUESTS=100 LOAD_TEST_CONCURRENCY=10 npm run test:load
+\`\`\`
+
+Publisher integration test:
+
+\`\`\`text
+TEST_PUBLISHER_EMAIL=publisher@example.com TEST_PUBLISHER_PASSWORD='your-password' npm run test-publisher
+\`\`\`
+
+The CI pipeline runs typecheck, core/image tests, lint, production build, production-server smoke tests and a 100-request/10-concurrency baseline load test.
+
+## Security baseline
+
+The application disables the framework-powered-by header and adds standard browser security headers in production. Public/authenticated write endpoints use a dependency-free per-instance rate limiter in addition to validation and authentication.
+
+The rate limiter is intentionally lightweight. For multi-region/global enforcement, back it with a shared store such as Redis/Vercel KV before treating the in-process limiter as the only abuse-control layer.
+
+## Environment
+
+Use \`.env.example\` as the source of variable names. Never commit \`.env.local\`, MongoDB credentials, Bunny API keys or NextAuth secrets.
+
+## Database/storage maintenance
+
+Existing migration scripts remain available:
+
+\`\`\`bash
+npm run migrate:bunny-wallpapers
+npm run migrate:user-profiles
+\`\`\`
