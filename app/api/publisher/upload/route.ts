@@ -45,8 +45,12 @@ export async function POST(request:Request){
       ["mobile",processed.variants.mobile],
       ["thumbnail",processed.variants.thumbnail]
     ] as const;
+
+    const variantsToUpload=variants.filter(([name]) =>
+      name==="thumbnail" || selectedDevices.includes(name as typeof allowedDevices[number])
+    );
     const variantMeta:any={};
-    for(const [name,data] of variants){
+    for(const [name,data] of variantsToUpload){
       const key="wallpapers/"+name+"/"+base+".webp";
       await uploadToBunny(key,data,"image/webp");
       variantMeta[name]={key,sizeBytes:data.length,mimeType:"image/webp"};
