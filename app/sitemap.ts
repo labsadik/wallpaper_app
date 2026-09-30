@@ -11,6 +11,6 @@ export default async function sitemap():Promise<MetadataRoute.Sitemap>{
   return [
     {url:base,lastModified:new Date()},
     {url:base+"/items",lastModified:new Date()},
-    ...rows.map(w=>({url:base+"/wallpapers/"+w.slug,lastModified:w.updatedAt||new Date()}))
+    ...rows.map(w=>({url:base+"/items/"+w.slug,lastModified:w.updatedAt||new Date()}))
   ];
 }
