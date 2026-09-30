@@ -28,7 +28,7 @@ export default function PublisherUploadPage(){
   const previewUrlRef=useRef("");
   const [devices,setDevices]=useState<DeviceId[]>(["desktop","tablet","mobile"]);
   const [status,setStatus]=useState("");
-  const [result,setResult]=useState<{id:string;slug:string;category:string;devices:DeviceId[]}|null>(null);
+  const [result,setResult]=useState<{id:string;slug:string;category:string;devices:DeviceId[];publishAt:string|null}|null>(null);
   const [progress,setProgress]=useState(0);
   const [progressLabel,setProgressLabel]=useState("");
 
