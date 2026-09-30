@@ -3,6 +3,7 @@ import {getActiveSession} from "@/lib/admin";
 import {connectDB} from "@/lib/mongodb";
 import Download from "@/models/Download";
 import PageShell from "@/components/page-shell";
+import {redirect} from "next/navigation";
 import WallpaperCard from "@/components/wallpaper-card";
 import {bunnyPublicUrl} from "@/lib/bunny";
 
@@ -10,7 +11,7 @@ export const dynamic="force-dynamic";
 
 export default async function DownloadHistoryPage(){
   const session=await getActiveSession();
-  if(!session?.user?.id) return null;
+  if(!session?.user?.id) redirect("/login");
   await connectDB();
 
   const rows=await Download.find({userId:session.user.id})
