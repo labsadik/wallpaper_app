@@ -6,7 +6,7 @@ import {requireAdmin} from "@/lib/admin";
 
 const roleSchema=z.enum(["user","publisher","admin"]);
 const actionSchema=z.object({
-  action:z.enum(["role","suspend","unsuspend","ban","unban"]),
+  action:z.enum(["role","suspend","unsuspend","ban","unban","verify","unverify"]),
   role:roleSchema.optional(),
   duration:z.enum(["1h","24h","7d","30d","permanent"]).optional(),
   reason:z.string().trim().max(500).optional()
@@ -34,6 +34,11 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
     return NextResponse.json({error:"Admins cannot suspend or ban their own account."},{status:400});
   }
 
+  if(parsed.data.action==="verify"||parsed.data.action==="unverify"){
+    if(user.role!=="publisher")return NextResponse.json({error:"Only publisher accounts can be verified."},{status:400});
+    user.isVerified=parsed.data.action==="verify";
+  }
+
   if(parsed.data.action==="role"){
     if(!parsed.data.role)return NextResponse.json({error:"Role is required"},{status:400});
     if(user.role==="admin"&&parsed.data.role!=="admin"){
@@ -41,6 +46,7 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
       if(adminCount<=1)return NextResponse.json({error:"The last active admin cannot be demoted."},{status:409});
     }
     user.role=parsed.data.role;
+    if(user.role!=="publisher")user.isVerified=false;
   }
 
   if((parsed.data.action==="suspend"||parsed.data.action==="ban")&&user.role==="admin"){
@@ -91,6 +97,9 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
       email:user.email,
       role:user.role,
       status:user.status,
+      isVerified:Boolean(user.isVerified),
+      username:user.username||null,
+      avatarKey:user.avatarKey||null,
       suspensionUntil:user.suspensionUntil,
       suspensionReason:user.suspensionReason,
       bannedAt:user.bannedAt,
