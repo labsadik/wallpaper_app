@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import {ChangeEvent,FormEvent,useEffect,useMemo,useState} from "react";
+import {ChangeEvent,FormEvent,useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
 import PageShell from "@/components/page-shell";
 import {Button,Field,Input} from "@/components/ui";
@@ -24,6 +24,7 @@ export default function PublisherUploadPage(){
   const [category,setCategory]=useState("Nature");
   const [file,setFile]=useState<File|null>(null);
   const [previewUrl,setPreviewUrl]=useState("");
+  const previewUrlRef=useRef("");
   const [devices,setDevices]=useState<DeviceId[]>(["desktop","tablet","mobile"]);
   const [status,setStatus]=useState("");
   const [result,setResult]=useState<{id:string;category:string;devices:DeviceId[]}|null>(null);
@@ -31,14 +32,10 @@ export default function PublisherUploadPage(){
   const [progressLabel,setProgressLabel]=useState("");
 
   useEffect(()=>{
-    if(!file){
-      setPreviewUrl("");
-      return;
-    }
-    const url=URL.createObjectURL(file);
-    setPreviewUrl(url);
-    return ()=>URL.revokeObjectURL(url);
-  },[file]);
+    return ()=>{
+      if(previewUrlRef.current)URL.revokeObjectURL(previewUrlRef.current);
+    };
+  },[]);
 
   const sourceInfo=useMemo(()=>{
     if(!file)return null;
@@ -48,7 +45,12 @@ export default function PublisherUploadPage(){
   function onFileChange(event:ChangeEvent<HTMLInputElement>){
     setResult(null);
     setStatus("");
-    setFile(event.target.files?.[0]||null);
+    const next=event.target.files?.[0]||null;
+    if(previewUrlRef.current)URL.revokeObjectURL(previewUrlRef.current);
+    const nextUrl=next?URL.createObjectURL(next):"";
+    previewUrlRef.current=nextUrl;
+    setPreviewUrl(nextUrl);
+    setFile(next);
   }
 
   function toggleDevice(device:DeviceId){
