@@ -8,6 +8,7 @@ import Wallpaper from "@/models/Wallpaper";
 import {signedMediaUrl} from "@/lib/media";
 import AdminUserTable from "@/components/admin-user-table";
 import AdminWallpaperActions from "@/components/admin-wallpaper-actions";
+import PublishedAt from "@/components/published-at";
 
 export const dynamic="force-dynamic";
 
@@ -75,6 +76,7 @@ export default async function AdminUserProfile({params}:{params:Promise<{id:stri
               </Link>
               <div style={{minWidth:0}}>
                 <h3 style={{fontSize:18,margin:"0 0 6px",overflowWrap:"anywhere"}}>{item.title}</h3>
+                <PublishedAt value={item.publishedAt?new Date(item.publishedAt).toISOString():null}/>
                 <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
                   <span className="badge">{item.category}</span>
                   <span className="badge">{item.status}</span>
