@@ -5,6 +5,7 @@ import {ChangeEvent,FormEvent,useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
 import PageShell from "@/components/page-shell";
 import {Button,Field,Input} from "@/components/ui";
+import AutoPublishIndicator from "@/components/auto-publish-indicator";
 
 const CATEGORIES=[
   "Nature","Abstract","Animals","Anime","Architecture","Cars","City",
