@@ -10,7 +10,7 @@ export default async function sitemap():Promise<MetadataRoute.Sitemap>{
   const rows=await Wallpaper.find({status:"published"},{slug:1,updatedAt:1}).lean();
   return [
     {url:base,lastModified:new Date()},
-    {url:base+"/wallpapers",lastModified:new Date()},
+    {url:base+"/items",lastModified:new Date()},
     ...rows.map(w=>({url:base+"/wallpapers/"+w.slug,lastModified:w.updatedAt||new Date()}))
   ];
 }
