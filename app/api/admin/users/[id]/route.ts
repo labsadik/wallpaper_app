@@ -43,6 +43,13 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
     user.role=parsed.data.role;
   }
 
+  if((parsed.data.action==="suspend"||parsed.data.action==="ban")&&user.role==="admin"){
+    const activeAdmins=await User.countDocuments({role:"admin",status:"active"});
+    if(activeAdmins<=1){
+      return NextResponse.json({error:"The last active admin cannot be suspended or banned."},{status:409});
+    }
+  }
+
   if(parsed.data.action==="suspend"){
     if(!parsed.data.duration)return NextResponse.json({error:"Suspension duration is required"},{status:400});
     user.status="suspended";
