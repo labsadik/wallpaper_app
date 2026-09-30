@@ -7,7 +7,7 @@ import AdminUserTable from "@/components/admin-user-table";
 
 export const dynamic="force-dynamic";
 
-type SearchParams={q?:string;role?:string;status?:string};
+type SearchParams={q?:string;role?:string;status?:string;verification?:string};
 
 export default async function AdminUsersPage({searchParams}:{searchParams:Promise<SearchParams>}){
   const session=await getActiveSession();
@@ -18,12 +18,15 @@ export default async function AdminUsersPage({searchParams}:{searchParams:Promis
   const q=(params.q||"").trim();
   const role=(params.role||"").trim();
   const status=(params.status||"").trim();
+  const verification=(params.verification||"").trim();
 
   await connectDB();
   const filter:Record<string,unknown>={};
   if(role&&["user","publisher","admin"].includes(role))filter.role=role;
   if(status&&["active","suspended","banned"].includes(status))filter.status=status;
-  if(q)filter.$or=[{name:{$regex:q,$options:"i"}},{email:{$regex:q,$options:"i"}}];
+  if(verification==="verified")filter.isVerified=true;
+  if(verification==="unverified")filter.isVerified=false;
+  if(q)filter.$or=[{name:{$regex:q,$options:"i"}},{username:{$regex:q,$options:"i"}},{email:{$regex:q,$options:"i"}}];
 
   const users=await User.find(filter)
     .select("name username email role status isVerified suspensionUntil suspensionReason banReason createdAt")
@@ -31,8 +34,8 @@ export default async function AdminUsersPage({searchParams}:{searchParams:Promis
     .limit(100)
     .lean();
 
-  const makeQuery=(next:{q?:string;role?:string;status?:string}={})=>{
-    const values={q:q||undefined,role:role||undefined,status:status||undefined,...next};
+  const makeQuery=(next:{q?:string;role?:string;status?:string;verification?:string}={})=>{
+    const values={q:q||undefined,role:role||undefined,status:status||undefined,verification:verification||undefined,...next};
     return Object.entries(values).filter(([,value])=>value).map(([key,value])=>key+"="+encodeURIComponent(String(value))).join("&");
   };
 
@@ -46,10 +49,13 @@ export default async function AdminUsersPage({searchParams}:{searchParams:Promis
       <Link href="/admin" className="btn">Back to admin</Link>
     </div>
 
-    <form method="get" className="card" style={{padding:14,marginTop:20,display:"grid",gridTemplateColumns:"minmax(220px,1fr) 180px 180px auto",gap:10}}>
-      <input name="q" defaultValue={q} placeholder="Search name or email…" style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"var(--input)",color:"var(--text)"}}/>
+    <form method="get" className="card" style={{padding:14,marginTop:20,display:"grid",gridTemplateColumns:"minmax(220px,1fr) 160px 160px 160px auto",gap:10}}>
+      <input name="q" defaultValue={q} placeholder="Search name, username or email…" style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"var(--input)",color:"var(--text)"}}/>
       <select name="role" defaultValue={role} style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"var(--input)",color:"var(--text)"}}>
         <option value="">All roles</option><option value="user">User</option><option value="publisher">Publisher</option><option value="admin">Admin</option>
+      </select>
+      <select name="verification" defaultValue={verification} style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"var(--input)",color:"var(--text)"}}>
+        <option value="">All verification</option><option value="verified">Verified</option><option value="unverified">Not verified</option>
       </select>
       <select name="status" defaultValue={status} style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"var(--input)",color:"var(--text)"}}>
         <option value="">All statuses</option><option value="active">Active</option><option value="suspended">Suspended</option><option value="banned">Banned</option>
