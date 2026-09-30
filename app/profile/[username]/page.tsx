@@ -86,7 +86,7 @@ export default async function PublicProfilePage({params}:Props){
         <p className="public-profile-username">@{user.username}</p>
         <ProfileStats username={user.username} followers={followers} following={followingCount} wallpapers={totalItems}/>
         <div className="public-profile-detail-stats">
-          <div><strong>Created</strong><span>{new Date(user.createdAt||Date.now()).toLocaleDateString()}</span></div>
+          <div><strong>Created</strong><span>{user.createdAt?new Date(user.createdAt).toLocaleDateString():"—"}</span></div>
           <div><strong>Total items</strong><span>{totalItems.toLocaleString()}</span></div>
           <div><strong>Total downloads</strong><span>{totalDownloads.toLocaleString()}</span></div>
         </div>
