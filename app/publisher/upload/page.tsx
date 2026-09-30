@@ -116,7 +116,8 @@ export default function PublisherUploadPage(){
               wallpaperId:payload.wallpaperId,
               slug:payload.slug,
               category:payload.category||category,
-              devices:Array.isArray(payload.devices)?payload.devices:[...devices]
+              devices:Array.isArray(payload.devices)?payload.devices:[...devices],
+              publishAt:payload.publishAt
             });
           }else{
             reject(new Error(payload.error||"Upload failed."));
