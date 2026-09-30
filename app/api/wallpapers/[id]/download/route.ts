@@ -5,7 +5,6 @@ import {authOptions} from "@/lib/auth";
 import {connectDB} from "@/lib/mongodb";
 import Wallpaper from "@/models/Wallpaper";
 import Download from "@/models/Download";
-import {bunnyPublicUrl} from "@/lib/bunny";
 
 function signedCdnUrl(path:string){
   const host=process.env.BUNNY_CDN_HOSTNAME; const key=process.env.BUNNY_CDN_TOKEN_KEY;
@@ -14,7 +13,7 @@ function signedCdnUrl(path:string){
   if(!key)return url;
   const expires=Math.floor(Date.now()/1000)+300;
   const data=new TextEncoder().encode(key+new URL(url).pathname+expires);
-  const hash=crypto.createHash("sha256").update(data).digest();
+  const hash=crypto.createHmac("sha256",key).update(data).digest();
   const token=hash.toString("base64url");
   return url+"?token="+encodeURIComponent("HS256-"+token)+"&expires="+expires;
 }
