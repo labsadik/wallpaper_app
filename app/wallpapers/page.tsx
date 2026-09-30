@@ -7,58 +7,94 @@ import {bunnyPublicUrl} from "@/lib/bunny";
 
 export const dynamic="force-dynamic";
 
-type SearchParams={q?:string;category?:string};
+type SearchParams={q?:string;category?:string;sort?:string};
 
 function escapeRegex(value:string){
   return value.replace(/[.*+?^{}()|[\]\\]/g,"\\$&");
 }
 
+const SORTS=[
+  ["newest","Newest"],
+  ["title-asc","Title A–Z"],
+  ["title-desc","Title Z–A"],
+  ["likes","Most liked"],
+  ["downloads","Most downloaded"]
+] as const;
+
 export default async function WallpapersPage({searchParams}:{searchParams:Promise<SearchParams>}){
   const params=await searchParams;
   const q=(params.q||"").trim();
   const category=(params.category||"").trim();
+  const sort=SORTS.some(([value])=>value===params.sort)?params.sort||"newest":"newest";
 
   await connectDB();
 
   const filter:Record<string,unknown>={status:"published"};
-  if(category&&category!=="All") filter.category=category;
+  if(category&&category!=="All")filter.category=category;
   if(q){
     const regex={$regex:escapeRegex(q),$options:"i"};
     filter.$or=[{title:regex},{category:regex},{tags:regex}];
   }
 
+  const sortMap:Record<string,Record<string,1|-1>>={
+    newest:{createdAt:-1},
+    "title-asc":{title:1},
+    "title-desc":{title:-1},
+    likes:{likeCount:-1,createdAt:-1},
+    downloads:{downloadCount:-1,createdAt:-1}
+  };
+
   const [wallpapers,categories]=await Promise.all([
-    Wallpaper.find(filter)
-      .sort({createdAt:-1})
-      .limit(60)
-      .lean(),
+    Wallpaper.find(filter).sort(sortMap[sort]).limit(60).lean(),
     Wallpaper.distinct("category",{status:"published"})
   ]);
 
-  return <PageShell eyebrow="Discover" title="Wallpapers" description="Browse published high-resolution wallpapers.">
-    <form method="get" style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:16}}>
-      <input name="q" defaultValue={q} placeholder="Search wallpapers..." aria-label="Search wallpapers" style={{flex:"1 1 280px",minWidth:220,padding:"11px 13px",borderRadius:12,border:"1px solid var(--line)",background:"#0d1118",color:"white"}}/>
+  const query=(extra:Record<string,string|undefined>={})=>{
+    const values={q:q||undefined,category:category||undefined,sort:sort!=="newest"?sort:undefined,...extra};
+    return Object.entries(values)
+      .filter(([,value])=>value)
+      .map(([key,value])=>key+"="+encodeURIComponent(String(value)))
+      .join("&");
+  };
+
+  return <PageShell eyebrow="Discover" title="Wallpapers" description="Browse wallpapers by category, title, popularity and download activity.">
+    <form method="get" style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:12}}>
+      <input name="q" defaultValue={q} placeholder="Search by title, category or tag…" aria-label="Search wallpapers" style={{flex:"1 1 280px",minWidth:220,padding:"11px 13px",borderRadius:12,border:"1px solid var(--line)",background:"#0d1118",color:"white"}}/>
       {category?<input type="hidden" name="category" value={category}/>:null}
+      <input type="hidden" name="sort" value={sort}/>
       <button className="btn btn-primary" type="submit">Search</button>
-      {q||category?<Link className="btn" href="/wallpapers">Clear</Link>:null}
+      {q||category||sort!=="newest"?<Link className="btn" href="/wallpapers">Clear</Link>:null}
     </form>
 
-    <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:24}}>
-      <Link className={!category?"btn btn-primary":"btn"} href={q?"/wallpapers?q="+encodeURIComponent(q):"/wallpapers"}>All</Link>
-      {categories.sort().map((x)=><Link className={category===x?"btn btn-primary":"btn"} href={"/wallpapers?category="+encodeURIComponent(x)+(q?"&q="+encodeURIComponent(q):"")} key={x}>{x}</Link>)}
+    <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center",marginBottom:16}}>
+      <span className="muted" style={{fontSize:13,fontWeight:700}}>Category</span>
+      <Link className={!category?"btn btn-primary":"btn"} href={query({category:undefined})||"/wallpapers"}>All</Link>
+      {categories.sort().map(x=><Link className={category===x?"btn btn-primary":"btn"} href={"/wallpapers?"+query({category:x})} key={x}>{x}</Link>)}
     </div>
 
-    {wallpapers.length===0?<div className="card" style={{padding:28}}><h2 style={{margin:"0 0 8px",fontSize:22}}>No published wallpapers found</h2><p className="muted" style={{margin:0}}>Try another search or category.</p></div>:<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:18}}>
-      {wallpapers.map(item=><WallpaperCard
-        key={String(item._id)}
-        slug={item.slug}
-        title={item.title}
-        category={item.category}
-        likes={item.likeCount}
-        downloads={item.downloadCount}
-        imageUrl={item.variants?.thumbnail?.key?bunnyPublicUrl(item.variants.thumbnail.key):undefined}
-        devices={item.devices||["desktop","tablet","mobile"]}
-      />)}
-    </div>}
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap",marginBottom:20}}>
+      <p className="muted" style={{margin:0}}>{wallpapers.length} wallpapers shown</p>
+      <label style={{display:"flex",alignItems:"center",gap:8,fontSize:13}}>
+        <span className="muted">Sort</span>
+        <select defaultValue={sort} onChange={event=>{window.location.href="/wallpapers?"+query({sort:event.target.value});}} style={{padding:"9px 11px",borderRadius:10,border:"1px solid var(--line)",background:"#0d1118",color:"white"}}>
+          {SORTS.map(([value,label])=><option key={value} value={value}>{label}</option>)}
+        </select>
+      </label>
+    </div>
+
+    {wallpapers.length===0
+      ? <div className="card" style={{padding:28}}><h2 style={{margin:"0 0 8px",fontSize:22}}>No published wallpapers found</h2><p className="muted" style={{margin:0}}>Try another title, category or sort.</p></div>
+      : <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:18}}>
+          {wallpapers.map(item=><WallpaperCard
+            key={String(item._id)}
+            slug={item.slug}
+            title={item.title}
+            category={item.category}
+            likes={item.likeCount}
+            downloads={item.downloadCount}
+            imageUrl={item.variants?.thumbnail?.key?bunnyPublicUrl(item.variants.thumbnail.key):undefined}
+            devices={item.devices||["desktop","tablet","mobile"]}
+          />)}
+        </div>}
   </PageShell>;
 }
