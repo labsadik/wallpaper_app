@@ -5,7 +5,7 @@ import Save from "@/models/Save";
 import PageShell from "@/components/page-shell";
 import {redirect} from "next/navigation";
 import WallpaperCard from "@/components/wallpaper-card";
-import {bunnyPublicUrl} from "@/lib/bunny";
+import {signedMediaUrl} from "@/lib/media";
 
 export const dynamic="force-dynamic";
 
@@ -29,7 +29,7 @@ export default async function SavedWallpapersPage(){
       category:w.category,
       likes:w.likeCount||0,
       downloads:w.downloadCount||0,
-      imageUrl:w.variants?.thumbnail?.key?bunnyPublicUrl(w.variants.thumbnail.key):undefined,
+      imageUrl:w.variants?.thumbnail?.key?signedMediaUrl(w.variants.thumbnail.key):undefined,
       devices:w.devices||["desktop","tablet","mobile"]
     };
   }).filter(Boolean);
