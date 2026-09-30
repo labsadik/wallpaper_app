@@ -9,6 +9,8 @@ import {signedMediaUrl} from "@/lib/media";
 import AdminUserTable from "@/components/admin-user-table";
 import AdminWallpaperActions from "@/components/admin-wallpaper-actions";
 import PublishedAt from "@/components/published-at";
+import VerifiedBadge from "@/components/verified-badge";
+import {signedMediaUrl} from "@/lib/media";
 
 export const dynamic="force-dynamic";
 
@@ -19,7 +21,7 @@ export default async function AdminUserProfile({params}:{params:Promise<{id:stri
 
   const {id}=await params;
   await connectDB();
-  const user=await User.findById(id).select("name email role status suspensionUntil suspensionReason banReason createdAt").lean();
+  const user=await User.findById(id).select("name username email role status isVerified avatarKey suspensionUntil suspensionReason banReason createdAt").lean();
   if(!user)notFound();
 
   const wallpapers=await Wallpaper.find({publisherId:user._id})
@@ -43,7 +45,7 @@ export default async function AdminUserProfile({params}:{params:Promise<{id:stri
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:16,flexWrap:"wrap"}}>
       <div>
         <p className="muted" style={{margin:"0 0 6px",fontWeight:700}}>User profile</p>
-        <h1 style={{fontSize:"clamp(32px,5vw,46px)",margin:0}}>{user.name}</h1>
+        <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><h1 style={{fontSize:"clamp(32px,5vw,46px)",margin:0}}>{user.name}</h1>{user.role==="publisher"&&user.isVerified?<VerifiedBadge/>:null}</div><p className="muted" style={{margin:"4px 0 0"}}>@{user.username||"user"} {user.role==="publisher"?(" · "+(user.isVerified?"Verified publisher":"Not verified")):""}</p>
         <p className="muted" style={{margin:"8px 0 0",overflowWrap:"anywhere"}}>{user.email}</p>
       </div>
       <Link href="/admin/users" className="btn">All users</Link>
