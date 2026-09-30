@@ -30,7 +30,7 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
   const user=await User.findById(id);
   if(!user)return NextResponse.json({error:"User not found"},{status:404});
 
-  if(String(user._id)===auth.session.user.id && parsed.data.action!=="role"){
+  if(String(user._id)===auth.session.user.id && ["suspend","unsuspend","ban","unban"].includes(parsed.data.action)){
     return NextResponse.json({error:"Admins cannot suspend or ban their own account."},{status:400});
   }
 
