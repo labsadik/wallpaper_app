@@ -87,7 +87,7 @@ export default function PublisherUploadPage(){
     formData.set("file",file);
 
     try{
-      const data=await new Promise<{wallpaperId:string;slug:string;category:string;devices:string[]}>((resolve,reject)=>{
+      const data=await new Promise<{wallpaperId:string;slug:string;category:string;devices:string[];publishAt?:string}>((resolve,reject)=>{
         const xhr=new XMLHttpRequest();
         xhr.open("POST","/api/publisher/upload",true);
 
