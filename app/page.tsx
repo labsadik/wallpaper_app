@@ -49,7 +49,7 @@ export default async function HomePage(){
                 const height=Math.max(16,variant?.height||900);
                 return <Link
                   key={String(item._id)}
-                  href={"/wallpapers/"+item.slug}
+                  href={"/items/"+item.slug}
                   className="pinterest-image-tile"
                   aria-label={"Open "+item.title}
                 >
