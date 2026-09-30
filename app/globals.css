@@ -541,3 +541,14 @@ body:has(.landing-shell) header .btn{background:#f8fafc;color:#111827;border-col
   .pinterest-item-title{font-size:14px}
   .items-sort-form .theme-select{max-width:125px}
 }
+
+
+.app-error-page{min-height:62vh;display:grid;place-items:center;padding:72px 0}
+.app-error-card{width:min(680px,100%);padding:32px;text-align:center}
+.app-error-card h1{margin:10px 0 10px;font-size:clamp(32px,5vw,52px);line-height:1.02;letter-spacing:-.04em}
+.app-error-card p{max-width:560px;margin:0 auto;line-height:1.7}
+.app-error-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:22px}
+@media(max-width:640px){
+  .app-error-page{padding:48px 0}
+  .app-error-card{padding:24px}
+}
