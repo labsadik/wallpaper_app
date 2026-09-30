@@ -1,10 +1,14 @@
 import {Schema,model,models,type InferSchemaType} from "mongoose";
 
+export const WALLPAPER_DEVICES=["desktop","tablet","mobile"] as const;
+export type WallpaperDevice=typeof WALLPAPER_DEVICES[number];
+
 const WallpaperSchema=new Schema({
   title:{type:String,trim:true,required:true,maxlength:160},
   slug:{type:String,trim:true,unique:true,index:true,required:true},
   category:{type:String,trim:true,index:true,required:true},
   tags:{type:[String],default:[]},
+  devices:{type:[String],enum:WALLPAPER_DEVICES,default:["desktop","tablet","mobile"],index:true},
   publisherId:{type:Schema.Types.ObjectId,ref:"User",index:true,required:true},
   status:{type:String,enum:["draft","processing","pending_review","published","rejected","archived"],default:"processing",index:true},
   qualityStatus:{type:String,enum:["pending","pass","warning","fail"],default:"pending"},
