@@ -39,7 +39,7 @@ export const authOptions:NextAuthOptions={
         email:user.email,
         username:user.username||null,
         role:user.role as "user"|"publisher"|"admin",
-        status:user.status as "user"|"publisher"|"admin" extends never? never: "active"|"suspended"|"banned",
+        status:user.status as "active"|"suspended"|"banned",
         isVerified:Boolean(user.isVerified),
         avatarKey:user.avatarKey||null
       };
