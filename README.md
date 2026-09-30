@@ -90,6 +90,10 @@ TEST_PUBLISHER_EMAIL=publisher@example.com TEST_PUBLISHER_PASSWORD='your-passwor
 
 The CI pipeline runs typecheck, core/image tests, lint, production build, production-server smoke tests and a 100-request/10-concurrency baseline load test.
 
+## Scheduled publishing
+
+New uploads receive a publish time 20 seconds after processing. The app also checks due uploads during normal requests, and `/api/cron/publish` runs every minute in production so publishing does not depend on a user opening a page. Configure `CRON_SECRET` in Vercel. Vercel plans have different Cron frequency limits; the included once-per-minute schedule requires a plan that supports that interval.
+
 ## Security baseline
 
 The application disables the framework-powered-by header and adds standard browser security headers in production. Public/authenticated write endpoints use a dependency-free per-instance rate limiter in addition to validation and authentication.
