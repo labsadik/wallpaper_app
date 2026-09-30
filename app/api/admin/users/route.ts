@@ -1,21 +1,7 @@
 import {NextResponse} from "next/server";
-import {z} from "zod";
 import {connectDB} from "@/lib/mongodb";
 import User from "@/models/User";
 import {requireAdmin} from "@/lib/admin";
-
-const roleSchema=z.enum(["user","publisher","admin"]);
-const actionSchema=z.object({
-  action:z.enum(["role","suspend","unsuspend","ban","unban"]),
-  role:roleSchema.optional(),
-  duration:z.enum(["1h","24h","7d","30d","permanent"]).optional(),
-  reason:z.string().trim().max(500).optional()
-});
-
-function durationMs(duration:string){
-  const map:Record<string,number>={1h:60*60*1000,"24h":24*60*60*1000,"7d":7*24*60*60*1000,"30d":30*24*60*60*1000};
-  return map[duration]??0;
-}
 
 export async function GET(request:Request){
   const auth=await requireAdmin();
@@ -32,12 +18,7 @@ export async function GET(request:Request){
   const filter:Record<string,unknown>={};
   if(role&&["user","publisher","admin"].includes(role))filter.role=role;
   if(status&&["active","suspended","banned"].includes(status))filter.status=status;
-  if(q){
-    filter.$or=[
-      {name:{$regex:q,$options:"i"}},
-      {email:{$regex:q,$options:"i"}}
-    ];
-  }
+  if(q)filter.$or=[{name:{$regex:q,$options:"i"}},{email:{$regex:q,$options:"i"}}];
 
   const users=await User.find(filter)
     .select("name email role status suspensionUntil suspensionReason bannedAt banReason createdAt updatedAt")
@@ -47,4 +28,3 @@ export async function GET(request:Request){
 
   return NextResponse.json({users});
 }
-
