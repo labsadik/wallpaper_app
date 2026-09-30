@@ -82,7 +82,7 @@ export default async function AdminUserProfile({params}:{params:Promise<{id:stri
                 <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
                   <span className="badge">{item.category}</span>
                   <span className="badge">{item.status}</span>
-                  {(item.devices||["desktop","tablet","mobile"]).map((device:string)=><span className="badge" key={device}>{device==="desktop"?"PC":device==="tablet"?"Tablet":"Mobile"}</span>)}
+                  {(item.devices||["desktop"]).map((device:string)=><span className="badge" key={device}>{device==="desktop"?"PC":device==="tablet"?"Tablet":"Mobile"}</span>)}
                 </div>
                 {item.moderationReason?<p className="muted" style={{fontSize:12,margin:"8px 0 0"}}>{item.moderationReason}</p>:null}
               </div>
