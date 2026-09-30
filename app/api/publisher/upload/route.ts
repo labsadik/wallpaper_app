@@ -4,14 +4,24 @@ import {connectDB} from "@/lib/mongodb";
 import User from "@/models/User";
 import Wallpaper from "@/models/Wallpaper";
 import {analyzeAndOptimize,slugify} from "@/lib/images";
-import {uploadToBunny} from "@/lib/bunny";
+import {uploadToBunny,deleteFromBunny} from "@/lib/bunny";
 import {getAutoPublishAt} from "@/lib/wallpaper-publish";
+import {getClientKey,rateLimit,rateLimitedResponse} from "@/lib/rate-limit";
 
 export const runtime="nodejs";
 
 export async function POST(request:Request){
   const session=await getActiveSession();
   if(!session?.user?.id)return NextResponse.json({error:"Unauthorized"},{status:401});
+
+  const limiter=rateLimit(
+    "publisher-upload:"+session.user.id+":"+getClientKey(request,"ip"),
+    10,
+    10*60*1000
+  );
+  if(!limiter.allowed){
+    return NextResponse.json({error:"Upload limit reached. Please try again later."},rateLimitedResponse(limiter.retryAfterSeconds));
+  }
 
   await connectDB();
   const user=await User.findById(session.user.id).select("name username role").lean();
@@ -36,6 +46,7 @@ export async function POST(request:Request){
   if(!category)return NextResponse.json({error:"Category is required"},{status:400});
 
   const buffer=Buffer.from(await file.arrayBuffer());
+  let uploadedKey:string|undefined;
 
   try{
     const processed=await analyzeAndOptimize(buffer);
@@ -45,10 +56,10 @@ export async function POST(request:Request){
     const selectedDevice=devices[0] as typeof allowedDevices[number];
     const data=processed.variants[selectedDevice];
     const base=Date.now()+"-"+processed.analysis.sha256.slice(0,12);
-
     const storageDevice=selectedDevice==="desktop"?"pc":selectedDevice==="tablet"?"tab":"mobile";
-    const key="feature_wallpapers/"+storageDevice+"/"+base+".webp";
-    await uploadToBunny(key,data,"image/webp");
+
+    uploadedKey="feature_wallpapers/"+storageDevice+"/"+base+".webp";
+    await uploadToBunny(uploadedKey,data,"image/webp");
 
     let username=user.username||slugify(user.name)||"user";
     if(!user.username){
@@ -67,24 +78,40 @@ export async function POST(request:Request){
     const slugBase=slugify(username+"-"+title+"-"+datePart+"-"+timePart)||("wallpaper-"+datePart+"-"+timePart);
     let slug=slugBase.slice(0,170);
     let suffix=1;
+
     while(await Wallpaper.exists({slug})){
       suffix++;
       const extra="-"+suffix;
-      slug=(slugBase.slice(0,170-extra.length)+extra);
+      slug=slugBase.slice(0,170-extra.length)+extra;
     }
 
     const variantMeta={
       [selectedDevice]:{
-        key,sizeBytes:data.length,mimeType:"image/webp",
-        width:processed.analysis.width,height:processed.analysis.height
+        key:uploadedKey,
+        sizeBytes:data.length,
+        mimeType:"image/webp",
+        width:processed.analysis.width,
+        height:processed.analysis.height
       }
     };
 
     const created=await Wallpaper.create({
-      title,slug,category,publisherId:user._id,devices:[selectedDevice],
-      status:"pending_review",publishAt:getAutoPublishAt(),
-      qualityStatus:processed.analysis.qualityStatus,duplicateStatus:"unique",
-      source:{width:processed.analysis.width,height:processed.analysis.height,sizeBytes:buffer.length,mimeType:file.type,sha256:processed.analysis.sha256},
+      title,
+      slug,
+      category,
+      publisherId:user._id,
+      devices:[selectedDevice],
+      status:"pending_review",
+      publishAt:getAutoPublishAt(),
+      qualityStatus:processed.analysis.qualityStatus,
+      duplicateStatus:"unique",
+      source:{
+        width:processed.analysis.width,
+        height:processed.analysis.height,
+        sizeBytes:buffer.length,
+        mimeType:file.type,
+        sha256:processed.analysis.sha256
+      },
       variants:variantMeta
     });
 
@@ -98,7 +125,7 @@ export async function POST(request:Request){
       publishAt:created.publishAt
     },{status:201});
   }catch(error){
-    const message=error instanceof Error?error.message:"Processing failed";
-    return NextResponse.json({error:message},{status:400});
+    if(uploadedKey)await deleteFromBunny(uploadedKey).catch(()=>{});
+    return NextResponse.json({error:error instanceof Error?error.message:"Processing failed"},{status:400});
   }
 }
