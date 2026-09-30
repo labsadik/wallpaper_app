@@ -36,7 +36,7 @@ export default async function PublisherPage(){
       </div>
       <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
         <Link href="/publisher/upload" className="btn btn-primary">Upload wallpaper</Link>
-        <Link href="/wallpapers" className="btn">View gallery</Link>
+        <Link href="/items" className="btn">View gallery</Link>
       </div>
     </div>
 
