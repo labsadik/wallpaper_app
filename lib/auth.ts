@@ -36,7 +36,7 @@ export const authOptions:NextAuthOptions={
       if(user.status==="banned" || isSuspended(user)) return null;
       if(!(await bcrypt.compare(parsed.data.password,user.passwordHash))) return null;
 
-      return {id:String(user._id),name:user.name,email:user.email,role:user.role as "user"|"publisher"|"admin"};
+      return {id:String(user._id),name:user.name,email:user.email,role:user.role as "user"|"publisher"|"admin",status:user.status as "active"|"suspended"|"banned"};
     }
   })],
   callbacks:{
