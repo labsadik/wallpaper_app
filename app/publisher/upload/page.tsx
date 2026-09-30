@@ -250,7 +250,7 @@ export default function PublisherUploadPage(){
           <strong>Saved upload · Pending review</strong>
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
             <span className="badge">{result.category}</span>
-            <span className="badge">pending_review</span>
+            <AutoPublishIndicator wallpaperId={result.id} status="pending_review" publishAt={result.publishAt}/>
             {DEVICES.filter(device=>result.devices.includes(device.id)).map(device=><span className="badge" key={device.id}>{device.label}</span>)}
           </div>
           <span className="muted" style={{fontSize:13}}>Wallpaper ID: {result.id}</span>
