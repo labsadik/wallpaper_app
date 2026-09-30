@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import {getActiveSession} from "@/lib/admin";
 import Header from "@/components/header";
 import ImageProtection from "@/components/image-protection";
+import SiteFooter from "@/components/site-footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -11,5 +12,5 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({children}:{children:React.ReactNode}){
   const session=await getActiveSession();
-  return <html lang="en"><body><Header session={session}/><ImageProtection/>{children}</body></html>;
+  return <html lang="en"><body><Header session={session}/><ImageProtection/>{children}<SiteFooter/></body></html>;
 }
