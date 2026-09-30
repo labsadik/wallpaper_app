@@ -131,7 +131,8 @@ export default function PublisherUploadPage(){
         id:String(data.wallpaperId),
         slug:String(data.slug),
         category:String(data.category||category),
-        devices:data.devices as DeviceId[]
+        devices:data.devices as DeviceId[],
+        publishAt:data.publishAt?new Date(data.publishAt).toISOString():null
       });
       setStatus("Upload submitted for review.");
       setProgressLabel("Complete");
