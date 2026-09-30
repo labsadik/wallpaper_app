@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "make-admin": "tsx scripts/make-admin.ts",
     "test-publisher": "tsx scripts/test-publisher.ts",
-    "diagnose": "tsx scripts/diagnose.ts"
+    "diagnose": "tsx scripts/diagnose.ts",
+    "test-image-processing": "tsx scripts/test-image-processing.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
