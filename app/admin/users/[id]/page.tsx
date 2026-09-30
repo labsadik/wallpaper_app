@@ -10,6 +10,7 @@ import AdminWallpaperActions from "@/components/admin-wallpaper-actions";
 import PublishedAt from "@/components/published-at";
 import VerifiedBadge from "@/components/verified-badge";
 import {signedMediaUrl} from "@/lib/media";
+import {getPreferredWallpaperDevice} from "@/lib/wallpaper-devices";
 
 export const dynamic="force-dynamic";
 
@@ -68,11 +69,11 @@ export default async function AdminUserProfile({params}:{params:Promise<{id:stri
       {wallpapers.length===0
         ? <div className="card" style={{padding:24}}><p className="muted" style={{margin:0}}>This account has no wallpaper posts.</p></div>
         : <div style={{display:"grid",gap:14}}>
-          {wallpapers.map(item=><article className="card" key={String(item._id)} style={{padding:14}}>
+          {wallpapers.map(item=>{const device=getPreferredWallpaperDevice(item.devices);return <article className="card" key={String(item._id)} style={{padding:14}}>
             <div className="admin-post-row" style={{alignItems:"center"}}>
               <Link href={"/wallpapers/"+item.slug} style={{display:"block"}}>
                 {item.variants?.[item.devices?.[0]||"desktop"]?.key
-                  ? <Image src={signedMediaUrl(item.variants?.[((item.devices?.[0]||"desktop")) as "desktop"|"tablet"|"mobile"]?.key||"")} alt={item.title} width={440} height={275} sizes="(max-width: 760px) 100vw, 440px" unoptimized style={{width:"100%",aspectRatio:"16/10",objectFit:"cover",borderRadius:12,display:"block"}}/>
+                  ? <Image src={signedMediaUrl(item.variants?.[device]?.key||"")} alt={item.title} width={440} height={275} sizes="(max-width: 760px) 100vw, 440px" unoptimized style={{width:"100%",aspectRatio:"16/10",objectFit:"cover",borderRadius:12,display:"block"}}/>
                   : <div style={{aspectRatio:"16/10",borderRadius:12,background:"#0d1118"}}/>
                 }
               </Link>
@@ -88,7 +89,7 @@ export default async function AdminUserProfile({params}:{params:Promise<{id:stri
               </div>
               <AdminWallpaperActions wallpaperId={String(item._id)} status={item.status}/>
             </div>
-          </article>)}
+          </article>})}
         </div>
       }
     </section>
