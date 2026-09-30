@@ -23,7 +23,7 @@ export default function WallpaperCard({
   const height=Math.max(1,imageHeight||10);
 
   return <article className="card wallpaper-card">
-    <Link href={"/wallpapers/"+slug} className="wallpaper-card-media">
+    <Link href={"/items/"+slug} className="wallpaper-card-media">
       <div className="wallpaper-card-image" style={{aspectRatio:width/height,backgroundImage:imageUrl?undefined:"linear-gradient(135deg,#eef2f7,#cbd5e1)"}}>
         {imageUrl
           ? <Image
@@ -47,11 +47,11 @@ export default function WallpaperCard({
       </div>
     </Link>
     <div className="wallpaper-card-body">
-      <Link href={"/wallpapers/"+slug}><h3>{title}</h3></Link>
+      <Link href={"/items/"+slug}><h3>{title}</h3></Link>
       <PublishedAt value={publishedAt}/>
       <div className="wallpaper-card-footer">
         <div className="muted wallpaper-metrics"><span>♥ {likes}</span><span>↓ {downloads}</span></div>
-        <ShareButton title={title} href={"/wallpapers/"+slug}/>
+        <ShareButton title={title} href={"/items/"+slug}/>
       </div>
     </div>
   </article>;
