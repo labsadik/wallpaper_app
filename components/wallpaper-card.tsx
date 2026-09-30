@@ -15,7 +15,7 @@ export default function WallpaperCard({
   imageUrl?:string;
   devices?:string[];
 }){
-  return <article className="card" style={{overflow:"hidden",background:"#0f141c"}}>
+  return <article className="card" style={{overflow:"hidden",background:"var(--card, #0f141c)"}}>
     <Link href={"/wallpapers/"+slug} style={{display:"block"}}>
       <div style={{aspectRatio:"16/10",background:imageUrl?"#06090f":"linear-gradient(135deg,#1b2432,#394760 45%,#10141b)",position:"relative"}}>
         {imageUrl?<Image src={imageUrl} alt={title} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" style={{objectFit:"cover"}} unoptimized/>:null}
