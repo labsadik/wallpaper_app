@@ -10,6 +10,8 @@ import {bunnyPublicUrl} from "@/lib/bunny";
 import WallpaperActions from "@/components/wallpaper-actions";
 import type {Metadata} from "next";
 
+const DEVICE_LABELS:Record<string,string>={desktop:"PC",tablet:"Tablet",mobile:"Mobile"};
+
 export const dynamic="force-dynamic";
 
 export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{
@@ -44,13 +46,19 @@ export default async function WallpaperPage({params}:{params:Promise<{slug:strin
   const width=w.variants?.desktop?.width||w.source?.width||1920;
   const height=w.variants?.desktop?.height||w.source?.height||1080;
   const shareUrl=(process.env.NEXT_PUBLIC_APP_URL||"http://localhost:3000")+"/wallpapers/"+w.slug;
+  const devices=w.devices?.length?w.devices:["desktop","tablet","mobile"];
 
   return <main className="container" style={{padding:"40px 0 80px"}}>
     <div className="card" style={{overflow:"hidden"}}>
       {image?<Image src={image} alt={w.title} width={width} height={height} sizes="(max-width: 1180px) 100vw, 1180px" priority style={{display:"block",width:"100%",height:"auto",maxHeight:"75vh",objectFit:"contain",background:"#05070b"}}/>:<div style={{aspectRatio:"16/9"}}/>}
       <div style={{padding:22}}>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",marginBottom:10}}>
+          <span className="badge">{w.category}</span>
+          {devices.map((device:string)=><span className="badge badge-selected" key={device}>{DEVICE_LABELS[device]||device}</span>)}
+          <span className={w.qualityStatus==="pass"?"badge badge-selected":"badge"}>{w.qualityStatus}</span>
+        </div>
         <h1 style={{fontSize:36,margin:"0 0 8px"}}>{w.title}</h1>
-        <p className="muted">{w.category} · {w.source?.width}×{w.source?.height} · ❤️ {w.likeCount} · 🔖 {w.saveCount} · ⬇ {w.downloadCount}</p>
+        <p className="muted">{w.source?.width}×{w.source?.height} source · ❤️ {w.likeCount} · 🔖 {w.saveCount} · ⬇ {w.downloadCount}</p>
         <div style={{marginTop:14}}>
           <WallpaperActions
             wallpaperId={String(w._id)}
