@@ -28,7 +28,7 @@ export default function LoginPage(){
   }
 
   return <main className="container" style={{padding:"64px 0 88px"}}>
-    <div style={{maxWidth:980,margin:"0 auto",display:"grid",gridTemplateColumns:"1fr 1fr",border:"1px solid var(--line)",borderRadius:22,overflow:"hidden",background:"var(--panel)"}}>
+    <div className="auth-grid" style={{maxWidth:980,margin:"0 auto",display:"grid",gridTemplateColumns:"1fr 1fr",border:"1px solid var(--line)",borderRadius:22,overflow:"hidden",background:"var(--panel)"}}>
       <section style={{padding:34,display:"flex",flexDirection:"column",justifyContent:"space-between",minHeight:520,background:"linear-gradient(145deg,#171d27,#0e1219)"}}>
         <div>
           <span className="badge">Wallpaper SaaS</span>
