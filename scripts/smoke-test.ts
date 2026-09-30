@@ -48,3 +48,5 @@ main().catch(error=>{
   console.error("❌ Smoke test failed:",error instanceof Error?error.message:error);
   process.exitCode=1;
 });
+
+export {};
