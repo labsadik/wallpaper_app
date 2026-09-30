@@ -34,6 +34,8 @@ export default async function DownloadHistoryPage(){
       likes:w.likeCount||0,
       downloads:w.downloadCount||0,
       imageUrl:w.variants?.[w.devices?.[0]||"desktop"]?.key?signedMediaUrl(w.variants?.[w.devices?.[0]||"desktop"]?.key):undefined,
+      imageWidth:w.variants?.[w.devices?.[0]||"desktop"]?.width,
+      imageHeight:w.variants?.[w.devices?.[0]||"desktop"]?.height,
       devices:w.devices||["desktop"],
       publishedAt:w.publishedAt?new Date(w.publishedAt).toISOString():null
     };
