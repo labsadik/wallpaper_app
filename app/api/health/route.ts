@@ -1,36 +1,37 @@
 import {connectDB} from "@/lib/mongodb";
 
 export const runtime="nodejs";
+export const dynamic="force-dynamic";
 
 export async function GET(request:Request){
-  const url=new URL(request.url);
-  const deep=url.searchParams.get("deep")==="1";
+  const deep=new URL(request.url).searchParams.get("deep")==="1";
+  let database:"ok"|"error"|"skipped"="skipped";
 
-  const checks={
-    env:{
-      mongo:Boolean(process.env.MONGODB_URI&&process.env.MONGODB_DB_NAME),
-      auth:Boolean(process.env.NEXTAUTH_SECRET&&process.env.NEXTAUTH_SECRET.length>=32),
-      bunnyStorage:Boolean(process.env.BUNNY_STORAGE_ZONE&&process.env.BUNNY_STORAGE_PASSWORD&&process.env.BUNNY_STORAGE_HOSTNAME),
-      bunnyCdn:Boolean(process.env.BUNNY_CDN_HOSTNAME&&process.env.BUNNY_CDN_TOKEN_KEY)
-    },
-    database:deep?"pending":"skipped"
-  };
-
-  let ok=Object.values(checks.env).every(Boolean);
-
-  if(deep&&ok){
+  if(deep){
     try{
       const connection=await connectDB();
       await connection.connection.db?.command({ping:1});
-      checks.database="ok";
+      database="ok";
     }catch{
-      checks.database="failed";
-      ok=false;
+      database="error";
     }
   }
 
+  const ok=database!=="error";
+
   return Response.json(
-    {ok,service:"wallpaper-saas",checks,timestamp:new Date().toISOString()},
-    {status:ok?200:503}
+    {
+      ok,
+      service:"wallpaper-saas",
+      timestamp:new Date().toISOString(),
+      ...(deep?{database}: {})
+    },
+    {
+      status:ok?200:503,
+      headers:{
+        "Cache-Control":"no-store",
+        "X-Content-Type-Options":"nosniff"
+      }
+    }
   );
 }
