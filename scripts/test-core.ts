@@ -1,4 +1,3 @@
-import crypto from "node:crypto";
 import {signedMediaUrl,verifyMediaSignature} from "../lib/media";
 import {slugify} from "../lib/images";
 
@@ -22,13 +21,12 @@ async function main(){
 
   const tampered=signature.slice(0,-1)+(signature.endsWith("0")?"1":"0");
   assert(!verifyMediaSignature(path,expires,tampered),"tampered media signature accepted");
-
   assert(!verifyMediaSignature(path,expires-120,signature),"expired media signature accepted");
 
   console.log("✅ Core utility/security tests passed");
 }
 
 main().catch(error=>{
-  console.error(error instanceof Error?error.message:error);
+  console.error("❌ Core test failed:",error instanceof Error?error.message:error);
   process.exitCode=1;
 });
