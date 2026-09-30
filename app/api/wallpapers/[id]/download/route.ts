@@ -9,6 +9,7 @@ import Download from "@/models/Download";
 function signedCdnUrl(path:string){
   const host=process.env.BUNNY_CDN_HOSTNAME; const key=process.env.BUNNY_CDN_TOKEN_KEY;
   if(!host) throw new Error("Missing BUNNY_CDN_HOSTNAME");
+  if(!key) throw new Error("Missing BUNNY_CDN_TOKEN_KEY");
   const url="https://"+host.replace(/^https?:\\/\\//,"")+"/"+path.split("/").map(encodeURIComponent).join("/");
   if(!key)return url;
   const expires=Math.floor(Date.now()/1000)+300;
