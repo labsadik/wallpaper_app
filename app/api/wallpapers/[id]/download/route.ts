@@ -1,50 +1,50 @@
 import {NextResponse} from "next/server";
-import crypto from "node:crypto";
-import mongoose from "mongoose";
 import {getActiveSession} from "@/lib/admin";
 import {connectDB} from "@/lib/mongodb";
 import Wallpaper from "@/models/Wallpaper";
 import Download from "@/models/Download";
 import {bunnySignedUrl} from "@/lib/bunny";
 
-const VALID_DEVICES=["desktop","tablet","mobile"] as const;
+const ALLOWED_DEVICES=["desktop","tablet","mobile"] as const;
+type Device=typeof ALLOWED_DEVICES[number];
 
-export const runtime="nodejs";
+function isDevice(value:string):value is Device{
+  return (ALLOWED_DEVICES as readonly string[]).includes(value);
+}
+
+function safeFilename(value:string){
+  return value.replace(/[^a-z0-9]+/gi,"-").replace(/^-+|-+$/g,"").slice(0,80)||"wallpaper";
+}
 
 export async function GET(request:Request,{params}:{params:Promise<{id:string}>}){
-  const session=await getActiveSession();
   const {id}=await params;
-  if(!mongoose.isValidObjectId(id)) return NextResponse.json({error:"Invalid wallpaper id"},{status:400});
+  const deviceParam=new URL(request.url).searchParams.get("device")||"desktop";
+  if(!isDevice(deviceParam))return NextResponse.json({error:"Invalid device."},{status:400});
 
-  try{
-    await connectDB();
-    const wallpaper=await Wallpaper.findOne({_id:id,status:"published"}).lean();
-    if(!wallpaper) return NextResponse.json({error:"Wallpaper not found"},{status:404});
-
-    const requestedDevice=new URL(request.url).searchParams.get("device");
-    const rawAvailable=(wallpaper.devices?.length?wallpaper.devices:["desktop","tablet","mobile"]) as string[];
-    const available=rawAvailable.filter((device:string):device is typeof VALID_DEVICES[number] =>
-      (VALID_DEVICES as readonly string[]).includes(device)
-    );
-    const device=(requestedDevice&&available.includes(requestedDevice as typeof VALID_DEVICES[number])
-      ? requestedDevice
-      : available.includes("desktop")?"desktop":available[0]);
-
-    const variant=wallpaper.variants?.[device as "desktop"|"tablet"|"mobile"];
-    if(!variant?.key) return NextResponse.json({error:"Selected device variant is unavailable"},{status:404});
-
-    const requestId=crypto.randomUUID();
-    await Download.create({userId:session?.user?.id||undefined,wallpaperId:id,requestId});
-    await Wallpaper.findByIdAndUpdate(id,{$inc:{downloadCount:1}});
-
-    const safeTitle=wallpaper.title.trim().replace(/[^a-z0-9]+/gi,"-").replace(/^-+|-+$/g,"").toLowerCase()||"wallpaper";
-    return NextResponse.json({
-      url:bunnySignedUrl(variant.key),
-      filename:safeTitle+"-"+device+".webp",
-      device
-    });
-  }catch(error){
-    const message=error instanceof Error?error.message:"Download failed";
-    return NextResponse.json({error:message},{status:500});
+  const session=await getActiveSession();
+  if(session?.user?.status&&session.user.status!=="active"){
+    return NextResponse.json({error:"Account is not active."},{status:403});
   }
+
+  await connectDB();
+  const wallpaper=await Wallpaper.findOne({_id:id,status:"published"}).lean();
+  if(!wallpaper)return NextResponse.json({error:"Wallpaper not found or not published."},{status:404});
+
+  const rawDevices=Array.isArray(wallpaper.devices)?wallpaper.devices as string[]:[];
+  const devices=rawDevices.filter(isDevice);
+  const device=(devices.includes(deviceParam)?deviceParam:devices[0])||"desktop";
+  const key=wallpaper.variants?.[device]?.key;
+  if(!key)return NextResponse.json({error:"That device version is not available."},{status:404});
+
+  const url=bunnySignedUrl(key,300);
+  await Wallpaper.findByIdAndUpdate(id,{$inc:{downloadCount:1}});
+  if(session?.user?.id){
+    await Download.create({userId:session.user.id,wallpaperId:wallpaper._id,device});
+  }
+
+  return NextResponse.json({
+    url,
+    device,
+    filename:safeFilename(wallpaper.title)+"-"+device+".webp"
+  });
 }
