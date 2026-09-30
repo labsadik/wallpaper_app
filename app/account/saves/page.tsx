@@ -11,7 +11,7 @@ export const dynamic="force-dynamic";
 
 export default async function SavedWallpapersPage(){
   const session=await getActiveSession();
-  if(!session?.user?.id) redirect("/login");
+  if(!session?.user?.id)redirect("/login");
   await connectDB();
 
   const rows=await Save.find({userId:session.user.id})
@@ -22,7 +22,7 @@ export default async function SavedWallpapersPage(){
 
   const items=rows.map((row)=>{
     const w=row.wallpaperId as any;
-    if(!w||w.status!=="published") return null;
+    if(!w||w.status!=="published")return null;
     return {
       slug:w.slug,
       title:w.title,
@@ -38,6 +38,13 @@ export default async function SavedWallpapersPage(){
   }).filter(Boolean);
 
   return <PageShell eyebrow="Account" title="Saved wallpapers" description="Your saved collection.">
-    {items.length===0?<div className="card" style={{padding:28}}><p className="muted" style={{margin:"0 0 14px"}}>You have not saved any published wallpapers yet.</p><Link className="btn btn-primary" href="/wallpapers">Browse wallpapers</Link></div>:<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:18}}>{items.map((item:any)=><WallpaperCard key={item.slug} {...item}/>)}</div>}
+    {items.length===0
+      ? <div className="card" style={{padding:28}}>
+          <p className="muted" style={{margin:"0 0 14px"}}>You have not saved any published wallpapers yet.</p>
+          <Link className="btn btn-primary" href="/items">Browse wallpapers</Link>
+        </div>
+      : <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:18}}>
+          {items.map((item:any)=><WallpaperCard key={item.slug} {...item}/>)}
+        </div>}
   </PageShell>;
 }
