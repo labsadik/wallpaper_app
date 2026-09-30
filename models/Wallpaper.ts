@@ -1,0 +1,25 @@
+import {Schema,model,models,type InferSchemaType} from "mongoose";
+
+const WallpaperSchema=new Schema({
+  title:{type:String,trim:true,required:true,maxlength:160},
+  slug:{type:String,trim:true,unique:true,index:true,required:true},
+  category:{type:String,trim:true,index:true,required:true},
+  tags:{type:[String],default:[]},
+  publisherId:{type:Schema.Types.ObjectId,ref:"User",index:true,required:true},
+  status:{type:String,enum:["draft","processing","pending_review","published","rejected","archived"],default:"processing",index:true},
+  qualityStatus:{type:String,enum:["pending","pass","warning","fail"],default:"pending"},
+  duplicateStatus:{type:String,enum:["pending","unique","possible_duplicate","duplicate"],default:"pending"},
+  source:{width:Number,height:Number,sizeBytes:Number,mimeType:String,sha256:String,phash:String},
+  variants:{
+    desktop:{key:String,width:Number,height:Number,sizeBytes:Number,mimeType:String},
+    tablet:{key:String,width:Number,height:Number,sizeBytes:Number,mimeType:String},
+    mobile:{key:String,width:Number,height:Number,sizeBytes:Number,mimeType:String},
+    thumbnail:{key:String,width:Number,height:Number,sizeBytes:Number,mimeType:String}
+  },
+  likeCount:{type:Number,default:0,index:true},
+  saveCount:{type:Number,default:0},
+  downloadCount:{type:Number,default:0,index:true}
+},{timestamps:true});
+
+export type WallpaperDoc=InferSchemaType<typeof WallpaperSchema>;
+export default models.Wallpaper||model("Wallpaper",WallpaperSchema);
