@@ -17,7 +17,7 @@
     "make-admin": "tsx scripts/make-admin.ts",
     "test-publisher": "tsx scripts/test-publisher.ts",
     "diagnose": "tsx scripts/diagnose.ts",
-    "migrate:bunny-wallpapers": "tsx scripts/migrate-bunny-wallpapers.ts",
+    "migrate:bunny-wallpapers": "tsx scripts/migrate-bunny-wallpaper-storage.ts",
     "migrate:user-profiles": "tsx scripts/migrate-user-profiles.ts"
   },
   "dependencies": {
