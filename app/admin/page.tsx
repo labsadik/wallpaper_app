@@ -11,86 +11,20 @@ import {autoPublishDueWallpapers} from "@/lib/wallpaper-publish";
 export const dynamic="force-dynamic";
 
 export default async function AdminPage(){
-  const session=await getActiveSession();
-  if(!session)redirect("/login");
-  if(session.user.role!=="admin")redirect("/account");
-
-  await connectDB();
-  await autoPublishDueWallpapers();
-
-  const [
-    users,activeUsers,publishers,admins,published,pending,removed,downloads,recentUsers,recentPosts
-  ]=await Promise.all([
-    User.countDocuments({}),
-    User.countDocuments({status:"active"}),
-    User.countDocuments({role:"publisher",status:{$ne:"banned"}}),
-    User.countDocuments({role:"admin",status:{$ne:"banned"}}),
-    Wallpaper.countDocuments({status:"published"}),
-    Wallpaper.countDocuments({status:"pending_review"}),
-    Wallpaper.countDocuments({status:"archived"}),
-    Download.countDocuments({}),
+  const session=await getActiveSession();if(!session)redirect("/login");if(session.user.role!=="admin")redirect("/account");
+  await connectDB();await autoPublishDueWallpapers();
+  const [users,activeUsers,publishers,admins,published,pending,removed,downloads,recentUsers,recentPosts]=await Promise.all([
+    User.countDocuments({}),User.countDocuments({status:"active"}),User.countDocuments({role:"publisher",status:{$ne:"banned"}}),User.countDocuments({role:"admin",status:{$ne:"banned"}}),
+    Wallpaper.countDocuments({status:"published"}),Wallpaper.countDocuments({status:"pending_review"}),Wallpaper.countDocuments({status:"archived"}),Download.countDocuments({}),
     User.find({}).select("name email role status createdAt").sort({createdAt:-1}).limit(6).lean(),
     Wallpaper.find({}).select("title slug category status publisherId devices qualityStatus createdAt").populate("publisherId","name email").sort({createdAt:-1}).limit(6).lean()
   ]);
-
-  return <PageShell
-    eyebrow="Admin Console"
-    title="Platform overview"
-    description="Observe users and content, manage account roles and restrictions, and moderate publisher posts."
-    actions={<div style={{display:"flex",gap:10,flexWrap:"wrap"}}><Link href="/admin/users" className="btn">Users</Link><Link href="/admin/wallpapers" className="btn">Wallpapers</Link><Link href="/publisher/upload" className="btn btn-primary">Upload</Link></div>}
-  >
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(170px,1fr))",gap:14}}>
-      {[
-        ["Users",users],["Active",activeUsers],["Publishers",publishers],["Admins",admins],
-        ["Published",published],["Pending review",pending],["Removed",removed],["Downloads",downloads]
-      ].map(([label,value])=><div className="card" key={String(label)} style={{padding:18}}>
-        <p className="muted" style={{margin:0,fontSize:13}}>{label}</p>
-        <strong style={{fontSize:31,display:"block",marginTop:7}}>{value}</strong>
-      </div>)}
-    </div>
-
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(320px,1fr))",gap:18,marginTop:22}}>
-      <section className="card" style={{padding:20}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
-          <div><h2 style={{fontSize:22,margin:0}}>Recent users</h2><p className="muted" style={{margin:"4px 0 0",fontSize:13}}>Latest accounts and their current roles.</p></div>
-          <Link className="btn" href="/admin/users">View all</Link>
-        </div>
-        <div style={{display:"grid",gap:10,marginTop:16}}>
-          {recentUsers.map(user=><Link href={"/admin/users/"+String(user._id)} key={String(user._id)} className="card" style={{padding:12}}>
-            <div style={{display:"flex",justifyContent:"space-between",gap:10}}>
-              <strong style={{overflowWrap:"anywhere"}}>{user.name}</strong>
-              <span className="badge">{user.role}</span>
-            </div>
-            <span className="muted" style={{fontSize:12,display:"block",marginTop:4,overflowWrap:"anywhere"}}>{user.email}</span>
-            <span className={user.status==="active"?"badge badge-selected":"badge"} style={{marginTop:7}}>{user.status}</span>
-          </Link>)}
-        </div>
-      </section>
-
-      <section className="card" style={{padding:20}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
-          <div><h2 style={{fontSize:22,margin:0}}>Recent posts</h2><p className="muted" style={{margin:"4px 0 0",fontSize:13}}>Inspect titles, categories, devices and moderation state.</p></div>
-          <Link className="btn" href="/admin/wallpapers">View all</Link>
-        </div>
-        <div style={{display:"grid",gap:10,marginTop:16}}>
-          {recentPosts.map(item=>{
-            const publisher=item.publisherId as any;
-            return <div className="card" key={String(item._id)} style={{padding:12}}>
-              <div style={{display:"flex",justifyContent:"space-between",gap:10,alignItems:"start"}}>
-                <div style={{minWidth:0}}>
-                  <strong style={{display:"block",overflowWrap:"anywhere"}}>{item.title}</strong>
-                  <span className="muted" style={{fontSize:12}}>{item.category} · {publisher?.name||"Unknown"}</span>
-                </div>
-                <span className="badge">{item.status}</span>
-              </div>
-              <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:8}}>
-                {(item.devices||["desktop","tablet","mobile"]).map((device:string)=><span className="badge" key={device}>{device==="desktop"?"PC":device==="tablet"?"Tablet":"Mobile"}</span>)}
-                <span className="badge">{item.qualityStatus}</span>
-              </div>
-            </div>;
-          })}
-        </div>
-      </section>
+  const stats=[["Users",users],["Active",activeUsers],["Publishers",publishers],["Admins",admins],["Published",published],["Pending review",pending],["Removed",removed],["Downloads",downloads]] as const;
+  return <PageShell eyebrow="Admin Console" title="Platform overview" description="Observe users and content, manage roles and restrictions, and moderate publisher posts." actions={<><Link href="/admin/users" className="btn">Users</Link><Link href="/admin/wallpapers" className="btn">Wallpapers</Link><Link href="/publisher/upload" className="btn btn-primary">Upload</Link></>}>
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">{stats.map(([label,value])=><div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm" key={label}><p className="m-0 text-xs font-bold text-slate-500">{label}</p><strong className="mt-1.5 block text-2xl font-black tracking-[-0.03em] text-slate-950">{value}</strong></div>)}</div>
+    <div className="mt-6 grid gap-5 lg:grid-cols-2">
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="flex items-start justify-between gap-4"><div><h2 className="m-0 text-lg font-black text-slate-950">Recent users</h2><p className="mt-1 text-xs leading-5 text-slate-500">Latest accounts and current access state.</p></div><Link className="text-xs font-extrabold text-slate-700 underline decoration-slate-300 underline-offset-4" href="/admin/users">View all</Link></div><div className="mt-4 grid gap-2">{recentUsers.map(user=><Link href={"/admin/users/"+String(user._id)} key={String(user._id)} className="group rounded-xl border border-slate-200 px-3.5 py-3 transition hover:border-slate-300 hover:bg-slate-50"><div className="flex items-start justify-between gap-3"><strong className="min-w-0 break-words text-sm font-black text-slate-900 group-hover:underline">{user.name}</strong><span className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-[10px] font-extrabold text-slate-600">{user.role}</span></div><span className="mt-1 block break-words text-xs text-slate-500">{user.email}</span><span className={user.status==="active"?"mt-2 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-extrabold text-emerald-700":"mt-2 inline-flex rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-extrabold text-slate-600"}>{user.status}</span></Link>)}</div></section>
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"><div className="flex items-start justify-between gap-4"><div><h2 className="m-0 text-lg font-black text-slate-950">Recent posts</h2><p className="mt-1 text-xs leading-5 text-slate-500">Inspect content and moderation state.</p></div><Link className="text-xs font-extrabold text-slate-700 underline decoration-slate-300 underline-offset-4" href="/admin/wallpapers">View all</Link></div><div className="mt-4 grid gap-2">{recentPosts.map(item=>{const publisher=item.publisherId as any;return <div className="rounded-xl border border-slate-200 p-3.5" key={String(item._id)}><div className="flex items-start justify-between gap-3"><div className="min-w-0"><strong className="block break-words text-sm font-black text-slate-900">{item.title}</strong><span className="mt-1 block break-words text-xs text-slate-500">{item.category} · {publisher?.name||"Unknown"}</span></div><span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-extrabold text-slate-600">{item.status}</span></div><div className="mt-2 flex flex-wrap gap-1.5">{(item.devices||["desktop","tablet","mobile"]).map((device:string)=><span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-extrabold text-slate-600" key={device}>{device==="desktop"?"PC":device==="tablet"?"Tablet":"Mobile"}</span>)}<span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-extrabold text-slate-600">{item.qualityStatus}</span></div></div>;})}</div></section>
     </div>
   </PageShell>;
 }
