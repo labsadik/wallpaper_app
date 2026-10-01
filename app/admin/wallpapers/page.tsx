@@ -9,93 +9,22 @@ import {signedMediaUrl} from "@/lib/media";
 import AdminBulkPublish from "@/components/admin-bulk-publish";
 import PublishedAt from "@/components/published-at";
 import {getPreferredWallpaperDevice} from "@/lib/wallpaper-devices";
+import {Input,Select} from "@/components/ui";
 
 export const dynamic="force-dynamic";
-
 type SearchParams={q?:string;status?:string;category?:string};
 
 export default async function AdminWallpapersPage({searchParams}:{searchParams:Promise<SearchParams>}){
-  const session=await getActiveSession();
-  if(!session)redirect("/login");
-  if(session.user.role!=="admin")redirect("/account");
+  const session=await getActiveSession();if(!session)redirect("/login");if(session.user.role!=="admin")redirect("/account");
+  const params=await searchParams,q=(params.q||"").trim(),status=(params.status||"").trim(),category=(params.category||"").trim();
+  await connectDB();const {autoPublishDueWallpapers}=await import("@/lib/wallpaper-publish");await autoPublishDueWallpapers();
+  const filter:Record<string,unknown>={};if(status&&["draft","processing","pending_review","published","rejected","archived"].includes(status))filter.status=status;if(category)filter.category=category;if(q)filter.$or=[{title:{$regex:q,$options:"i"}},{category:{$regex:q,$options:"i"}}];
+  const [items,categories]=await Promise.all([Wallpaper.find(filter).sort({createdAt:-1}).limit(100).populate("publisherId","name email").lean(),Wallpaper.distinct("category")]);
 
-  const params=await searchParams;
-  const q=(params.q||"").trim();
-  const status=(params.status||"").trim();
-  const category=(params.category||"").trim();
-
-  await connectDB();
-  const {autoPublishDueWallpapers}=await import("@/lib/wallpaper-publish");
-  await autoPublishDueWallpapers();
-  const filter:Record<string,unknown>={};
-  if(status&&["draft","processing","pending_review","published","rejected","archived"].includes(status))filter.status=status;
-  if(category)filter.category=category;
-  if(q)filter.$or=[{title:{$regex:q,$options:"i"}},{category:{$regex:q,$options:"i"}}];
-
-  const [items,categories]=await Promise.all([
-    Wallpaper.find(filter).sort({createdAt:-1}).limit(100).populate("publisherId","name email").lean(),
-    Wallpaper.distinct("category")
-  ]);
-
-  return <main className="container" style={{padding:"42px 0 80px"}}>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:16,flexWrap:"wrap"}}>
-      <div>
-        <p className="muted" style={{margin:"0 0 6px",fontWeight:700}}>Admin Console</p>
-        <h1 style={{fontSize:"clamp(34px,5vw,48px)",margin:0}}>Wallpapers</h1>
-        <p className="muted" style={{maxWidth:720,margin:"10px 0 0"}}>Inspect every post, see its publisher, title, category, devices and moderation state, then remove or restore it.</p>
-      </div>
-      <div style={{display:"flex",gap:10}}>
-        <Link href="/admin" className="btn">Back to admin</Link>
-        <AdminBulkPublish/>
-        <Link href="/publisher/upload" className="btn">Upload</Link>
-      </div>
-    </div>
-
-    <form method="get" className="card" style={{padding:14,marginTop:20,display:"grid",gridTemplateColumns:"minmax(220px,1fr) 180px 180px auto",gap:10}}>
-      <input name="q" defaultValue={q} placeholder="Search title or category…" style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"var(--input)",color:"var(--text)"}}/>
-      <select name="status" defaultValue={status} style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"var(--input)",color:"var(--text)"}}>
-        <option value="">All statuses</option>
-        <option value="pending_review">Pending review</option><option value="published">Published</option><option value="rejected">Rejected</option><option value="archived">Removed</option><option value="processing">Processing</option><option value="draft">Draft</option>
-      </select>
-      <select name="category" defaultValue={category} style={{padding:"10px 12px",borderRadius:10,border:"1px solid var(--line)",background:"var(--input)",color:"var(--text)"}}>
-        <option value="">All categories</option>
-        {categories.sort().map(item=><option value={item} key={item}>{item}</option>)}
-      </select>
-      <div style={{display:"flex",gap:8}}><button className="btn btn-primary" type="submit">Filter</button><Link className="btn" href="/admin/wallpapers">Reset</Link></div>
-    </form>
-
-    <div style={{marginTop:16,display:"grid",gap:12}}>
-      {items.length===0
-        ? <div className="card" style={{padding:24}}><p className="muted" style={{margin:0}}>No wallpapers match the current filters.</p></div>
-        : items.map(item=>{
-          const publisher=item.publisherId as any;
-          const devices=item.devices||["desktop"];
-          const device=getPreferredWallpaperDevice(devices);
-          return <article className="card" key={String(item._id)} style={{padding:14}}>
-            <div className="admin-post-row">
-              <div>
-                {item.variants?.[device]?.key
-                  ? <Image src={signedMediaUrl(item.variants?.[device]?.key||"")} alt={item.title} width={460} height={290} sizes="(max-width: 760px) 100vw, 460px" unoptimized style={{display:"block",width:"100%",aspectRatio:"16/10",objectFit:"cover",borderRadius:12}}/>
-                  : <div style={{aspectRatio:"16/10",borderRadius:12,background:"#0d1118"}}/>
-                }
-              </div>
-              <div style={{minWidth:0}}>
-                <h2 style={{fontSize:18,margin:"0 0 6px",overflowWrap:"anywhere"}}>{item.title}</h2>
-                <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
-                  <span className="badge">{item.category}</span>
-                  <span className="badge">{item.status}</span>
-                  <span className={item.qualityStatus==="pass"?"badge badge-selected":"badge"}>{item.qualityStatus}</span>
-                  {devices.map((device:string)=><span className="badge" key={device}>{device==="desktop"?"PC":device==="tablet"?"Tablet":"Mobile"}</span>)}
-                </div>
-                <p className="muted" style={{fontSize:12,margin:"7px 0 0",overflowWrap:"anywhere"}}>Publisher: {publisher?.name||"Unknown"} · {publisher?.email||""}</p>
-                <p className="muted" style={{fontSize:12,margin:"4px 0 0"}}>{item.likeCount||0} likes · {item.saveCount||0} saves · {item.downloadCount||0} downloads</p>
-                <PublishedAt value={item.publishedAt?new Date(item.publishedAt).toISOString():null}/>
-                {item.moderationReason?<p className="muted" style={{fontSize:12,margin:"6px 0 0"}}>{item.moderationReason}</p>:null}
-              </div>
-              <AdminWallpaperActions wallpaperId={String(item._id)} status={item.status}/>
-            </div>
-          </article>;
-        })}
-    </div>
+  return <main className="mx-auto w-full max-w-[1180px] px-5 pb-20 pt-8 sm:px-6 sm:pt-10 lg:px-8">
+    <div className="mb-7 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-[0.14em] text-slate-500">Admin Console</p><h1 className="mt-1 text-4xl font-black tracking-[-0.045em] text-slate-950 sm:text-5xl">Wallpapers</h1><p className="mt-3 max-w-2xl text-[15px] leading-7 text-slate-500">Inspect content, publishers, target devices and moderation state. Restore or remove posts from public view.</p></div><div className="flex flex-wrap gap-2"><Link href="/admin" className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-extrabold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">Back to admin</Link><AdminBulkPublish/><Link href="/publisher/upload" className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-extrabold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">Upload</Link></div></div>
+    <form method="get" className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-[minmax(0,1.6fr)_repeat(2,minmax(170px,1fr))_auto]"><Input name="q" defaultValue={q} placeholder="Search title or category…" aria-label="Search wallpapers"/><Select name="status" defaultValue={status}><option value="">All statuses</option><option value="pending_review">Pending review</option><option value="published">Published</option><option value="rejected">Rejected</option><option value="archived">Removed</option><option value="processing">Processing</option><option value="draft">Draft</option></Select><Select name="category" defaultValue={category}><option value="">All categories</option>{categories.sort().map(item=><option value={item} key={item}>{item}</option>)}</Select><div className="flex gap-2"><button className="min-h-11 flex-1 rounded-xl bg-slate-900 px-4 text-sm font-extrabold text-white hover:bg-slate-800 md:flex-none" type="submit">Filter</button><Link className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 px-4 text-sm font-extrabold text-slate-700 hover:bg-slate-50" href="/admin/wallpapers">Reset</Link></div></form>
+    <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3"><span className="text-sm font-black text-slate-900">{items.length} wallpapers shown</span><span className="text-xs font-semibold text-slate-500">Newest first</span></div>
+    <div className="mt-4 grid gap-3">{items.length===0?<div className="rounded-2xl border border-dashed border-slate-300 bg-white p-9 text-center"><p className="m-0 text-sm text-slate-500">No wallpapers match the current filters.</p></div>:items.map(item=>{const publisher=item.publisherId as any,devices=item.devices||["desktop"],device=getPreferredWallpaperDevice(devices),variant=item.variants?.[device];return <article className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm md:grid-cols-[220px_minmax(0,1fr)_auto] md:items-center" key={String(item._id)}><Link href={"/items/"+item.slug} className="group overflow-hidden rounded-xl bg-slate-100">{variant?.key?<Image className="protected-image block aspect-[16/10] h-full w-full object-cover transition duration-300 group-hover:scale-[1.012]" src={signedMediaUrl(variant.key)} alt={item.title} width={460} height={290} sizes="(max-width: 768px) 100vw, 220px" unoptimized/>:<div className="aspect-[16/10]"/>}</Link><div className="min-w-0"><div className="flex flex-wrap gap-1.5"><span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-extrabold text-slate-600">{item.category}</span><span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-extrabold text-slate-600">{item.status}</span><span className={item.qualityStatus==="pass"?"rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-extrabold text-emerald-700":"rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-extrabold text-slate-600"}>{item.qualityStatus}</span>{devices.map((device:string)=><span className="rounded-full bg-slate-900 px-2.5 py-1 text-[10px] font-extrabold text-white" key={device}>{device==="desktop"?"PC":device==="tablet"?"Tablet":"Mobile"}</span>)}</div><h2 className="mt-2 break-words text-base font-black tracking-[-0.01em] text-slate-950">{item.title}</h2><p className="mt-1 break-words text-xs font-semibold text-slate-500">Publisher: {publisher?.name||"Unknown"} · {publisher?.email||""}</p><p className="mt-1 text-xs font-semibold text-slate-500">{item.likeCount||0} likes · {item.saveCount||0} saves · {item.downloadCount||0} downloads</p><div className="mt-1.5"><PublishedAt value={item.publishedAt?new Date(item.publishedAt).toISOString():null}/></div>{item.moderationReason?<p className="mt-2 break-words text-xs leading-5 text-slate-500">{item.moderationReason}</p>:null}</div><AdminWallpaperActions wallpaperId={String(item._id)} status={item.status}/></article>})}</div>
   </main>;
 }

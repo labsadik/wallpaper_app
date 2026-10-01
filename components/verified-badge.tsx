@@ -1,3 +1,1 @@
-export default function VerifiedBadge({label="Verified publisher"}:{label?:string}){
-  return <span className="verified-badge" title={label} aria-label={label}>✓</span>;
-}
+export default function VerifiedBadge({label="Verified publisher"}:{label?:string}){return <span className="inline-grid size-5 shrink-0 place-items-center rounded-full bg-blue-600 text-[11px] font-black leading-none text-white ring-2 ring-blue-100" title={label} aria-label={label}>✓</span>;}

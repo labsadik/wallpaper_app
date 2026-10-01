@@ -1,18 +1,3 @@
 export default function ItemsSkeleton(){
-  return <main className="items-page" aria-busy="true" aria-label="Loading items">
-    <section className="container items-page-head items-skeleton-head">
-      <div className="skeleton-line items-skeleton-kicker"/>
-      <div className="skeleton-line items-skeleton-title"/>
-      <div className="skeleton-line items-skeleton-copy"/>
-      <div className="skeleton-line items-skeleton-search"/>
-      <div className="items-skeleton-pills">
-        {Array.from({length:7},(_,index)=><div className="skeleton-line items-skeleton-pill" key={index}/>)}
-      </div>
-    </section>
-    <section className="container items-feed">
-      <div className="pinterest-masonry items-skeleton-masonry">
-        {Array.from({length:14},(_,index)=><div className="items-skeleton-tile skeleton-card" key={index}/>)}
-      </div>
-    </section>
-  </main>;
+  return <main className="min-h-screen pb-20 pt-8 sm:pt-10" aria-busy="true" aria-label="Loading items"><section className="mx-auto w-full max-w-[1180px] px-5 sm:px-6 lg:px-8"><div className="h-3 w-24 animate-pulse rounded-full bg-slate-200"/><div className="mt-3 h-10 w-full max-w-xl animate-pulse rounded-xl bg-slate-200 sm:h-12"/><div className="mt-3 h-5 w-full max-w-2xl animate-pulse rounded-lg bg-slate-200"/><div className="mt-6 h-11 w-full max-w-xl animate-pulse rounded-xl bg-slate-200"/><div className="mt-5 flex gap-2 overflow-hidden"><div className="h-8 w-16 shrink-0 animate-pulse rounded-full bg-slate-200"/>{Array.from({length:6},(_,i)=><div className="h-8 w-24 shrink-0 animate-pulse rounded-full bg-slate-200" key={i}/>)}</div></section><section className="mx-auto mt-7 w-full max-w-[1180px] columns-1 gap-4 px-5 sm:columns-2 sm:px-6 lg:columns-3 xl:columns-4 lg:px-8">{Array.from({length:14},(_,index)=><div className="mb-4 break-inside-avoid overflow-hidden rounded-2xl bg-slate-200" key={index}><div className={index%3===0?"aspect-[4/5] w-full animate-pulse":"aspect-video w-full animate-pulse"}/><div className="space-y-2 bg-white p-4"><div className="h-4 w-3/4 animate-pulse rounded bg-slate-200"/><div className="h-3 w-1/2 animate-pulse rounded bg-slate-100"/></div></div>)}</section></main>;
 }

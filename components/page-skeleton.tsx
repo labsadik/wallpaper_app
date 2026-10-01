@@ -1,18 +1,3 @@
-import PageShell from "@/components/page-shell";
-
 export default function PageSkeleton(){
-  return <PageShell eyebrow="Loading" title="" description="">
-    <div className="skeleton-page" aria-busy="true" aria-label="Loading">
-      <div className="skeleton-line skeleton-title"/>
-      <div className="skeleton-line skeleton-subtitle"/>
-      <div className="skeleton-toolbar">
-        <div className="skeleton-line skeleton-chip"/>
-        <div className="skeleton-line skeleton-chip"/>
-        <div className="skeleton-line skeleton-chip"/>
-      </div>
-      <div className="skeleton-grid">
-        {Array.from({length:8},(_,index)=><div className="skeleton-card" key={index}/>)}
-      </div>
-    </div>
-  </PageShell>;
+  return <main className="mx-auto w-full max-w-[1180px] px-5 pb-20 pt-10 sm:px-6 lg:px-8" aria-busy="true" aria-label="Loading page"><div className="h-3 w-20 animate-pulse rounded-full bg-slate-200"/><div className="mt-3 h-12 w-full max-w-xl animate-pulse rounded-xl bg-slate-200"/><div className="mt-3 h-5 w-full max-w-2xl animate-pulse rounded-lg bg-slate-200"/><div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{Array.from({length:8},(_,index)=><div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" key={index}><div className="aspect-[16/10] animate-pulse bg-slate-200"/><div className="space-y-2 p-4"><div className="h-4 w-3/4 animate-pulse rounded bg-slate-200"/><div className="h-3 w-1/2 animate-pulse rounded bg-slate-100"/></div></div>)}</div></main>;
 }

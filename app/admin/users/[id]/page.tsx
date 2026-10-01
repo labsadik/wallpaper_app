@@ -15,83 +15,9 @@ import {getPreferredWallpaperDevice} from "@/lib/wallpaper-devices";
 export const dynamic="force-dynamic";
 
 export default async function AdminUserProfile({params}:{params:Promise<{id:string}>}){
-  const session=await getActiveSession();
-  if(!session)redirect("/login");
-  if(session.user.role!=="admin")redirect("/account");
-
-  const {id}=await params;
-  await connectDB();
-  const user=await User.findById(id).select("name username email role status isVerified avatarKey suspensionUntil suspensionReason banReason createdAt").lean();
-  if(!user)notFound();
-
-  const wallpapers=await Wallpaper.find({publisherId:user._id})
-    .sort({createdAt:-1})
-    .limit(50)
-    .lean();
-
-  const account=[{
-    _id:String(user._id),
-    name:user.name,
-    email:user.email,
-    role:user.role as "user"|"publisher"|"admin",
-    status:user.status as "active"|"suspended"|"banned",
-    isVerified:Boolean(user.isVerified),
-    suspensionUntil:user.suspensionUntil?new Date(user.suspensionUntil):null,
-    suspensionReason:user.suspensionReason,
-    banReason:user.banReason,
-    createdAt:user.createdAt?new Date(user.createdAt):undefined
-  }];
-
-  return <main className="container" style={{padding:"42px 0 80px"}}>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:16,flexWrap:"wrap"}}>
-      <div>
-        <p className="muted" style={{margin:"0 0 6px",fontWeight:700}}>User profile</p>
-        <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><h1 style={{fontSize:"clamp(32px,5vw,46px)",margin:0}}>{user.name}</h1>{user.role==="publisher"&&user.isVerified?<VerifiedBadge/>:null}</div><p className="muted" style={{margin:"4px 0 0"}}>@{user.username||"user"} {user.role==="publisher"?(" · "+(user.isVerified?"Verified publisher":"Not verified")):""}</p>
-        <p className="muted" style={{margin:"8px 0 0",overflowWrap:"anywhere"}}>{user.email}</p>
-      </div>
-      <Link href="/admin/users" className="btn">All users</Link>
-    </div>
-
-    <section style={{marginTop:22}}>
-      <h2 style={{fontSize:22,margin:"0 0 12px"}}>Account controls</h2>
-      <AdminUserTable users={account} currentAdminId={session.user.id}/>
-    </section>
-
-    <section style={{marginTop:30}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,marginBottom:14}}>
-        <div>
-          <h2 style={{fontSize:22,margin:0}}>Published & submitted posts</h2>
-          <p className="muted" style={{margin:"4px 0 0"}}>An administrator can remove a post from public view from this profile.</p>
-        </div>
-        <span className="badge">{wallpapers.length}</span>
-      </div>
-
-      {wallpapers.length===0
-        ? <div className="card" style={{padding:24}}><p className="muted" style={{margin:0}}>This account has no wallpaper posts.</p></div>
-        : <div style={{display:"grid",gap:14}}>
-          {wallpapers.map(item=>{const device=getPreferredWallpaperDevice(item.devices);return <article className="card" key={String(item._id)} style={{padding:14}}>
-            <div className="admin-post-row" style={{alignItems:"center"}}>
-              <Link href={"/items/"+item.slug} style={{display:"block"}}>
-                {item.variants?.[device]?.key
-                  ? <Image src={signedMediaUrl(item.variants?.[device]?.key||"")} alt={item.title} width={440} height={275} sizes="(max-width: 760px) 100vw, 440px" unoptimized style={{width:"100%",aspectRatio:"16/10",objectFit:"cover",borderRadius:12,display:"block"}}/>
-                  : <div style={{aspectRatio:"16/10",borderRadius:12,background:"#0d1118"}}/>
-                }
-              </Link>
-              <div style={{minWidth:0}}>
-                <h3 style={{fontSize:18,margin:"0 0 6px",overflowWrap:"anywhere"}}>{item.title}</h3>
-                <PublishedAt value={item.publishedAt?new Date(item.publishedAt).toISOString():null}/>
-                <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
-                  <span className="badge">{item.category}</span>
-                  <span className="badge">{item.status}</span>
-                  {(item.devices||["desktop"]).map((device:string)=><span className="badge" key={device}>{device==="desktop"?"PC":device==="tablet"?"Tablet":"Mobile"}</span>)}
-                </div>
-                {item.moderationReason?<p className="muted" style={{fontSize:12,margin:"8px 0 0"}}>{item.moderationReason}</p>:null}
-              </div>
-              <AdminWallpaperActions wallpaperId={String(item._id)} status={item.status}/>
-            </div>
-          </article>})}
-        </div>
-      }
-    </section>
-  </main>;
+  const session=await getActiveSession();if(!session)redirect("/login");if(session.user.role!=="admin")redirect("/account");
+  const {id}=await params;await connectDB();const user=await User.findById(id).select("name username email role status isVerified avatarKey suspensionUntil suspensionReason banReason createdAt").lean();if(!user)notFound();
+  const wallpapers=await Wallpaper.find({publisherId:user._id}).sort({createdAt:-1}).limit(50).lean();
+  const account=[{_id:String(user._id),name:user.name,email:user.email,role:user.role as "user"|"publisher"|"admin",status:user.status as "active"|"suspended"|"banned",isVerified:Boolean(user.isVerified),suspensionUntil:user.suspensionUntil?new Date(user.suspensionUntil):null,suspensionReason:user.suspensionReason,banReason:user.banReason,createdAt:user.createdAt?new Date(user.createdAt):undefined}];
+  return <main className="mx-auto w-full max-w-[1180px] px-5 pb-20 pt-8 sm:px-6 lg:px-8"><div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-[0.14em] text-slate-500">User profile</p><div className="mt-2 flex flex-wrap items-center gap-2"><h1 className="m-0 break-words text-3xl font-black tracking-[-0.04em] text-slate-950 sm:text-4xl">{user.name}</h1>{user.role==="publisher"&&user.isVerified?<VerifiedBadge/>:null}</div><p className="mt-1 break-words text-sm font-semibold text-slate-500">@{user.username||"user"}{user.role==="publisher"?" · "+(user.isVerified?"Verified publisher":"Not verified"):""}</p><p className="mt-1 break-words text-sm text-slate-500">{user.email}</p></div><Link href="/admin/users" className="inline-flex min-h-10 items-center justify-center self-start rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-extrabold text-slate-700 transition hover:bg-slate-50 sm:self-auto">All users</Link></div><section><h2 className="mb-3 text-xl font-black tracking-[-0.02em] text-slate-950">Account controls</h2><AdminUserTable users={account} currentAdminId={session.user.id}/></section><section className="mt-9"><div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"><div><h2 className="m-0 text-xl font-black tracking-[-0.02em] text-slate-950">Published & submitted posts</h2><p className="mt-1 text-sm leading-6 text-slate-500">Review the account’s content and remove a post from public view when necessary.</p></div><span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-extrabold text-slate-600">{wallpapers.length} posts</span></div>{wallpapers.length===0?<div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center"><p className="m-0 text-sm text-slate-500">This account has no wallpaper posts.</p></div>:<div className="grid gap-3">{wallpapers.map(item=>{const device=getPreferredWallpaperDevice(item.devices),variant=item.variants?.[device];return <article className="grid gap-4 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm md:grid-cols-[220px_minmax(0,1fr)_auto] md:items-center" key={String(item._id)}><Link href={"/items/"+item.slug} className="overflow-hidden rounded-xl bg-slate-100">{variant?.key?<Image className="protected-image block aspect-[16/10] h-full w-full object-cover" src={signedMediaUrl(variant.key)} alt={item.title} width={440} height={275} sizes="(max-width: 768px) 100vw, 220px" unoptimized/>:<div className="aspect-[16/10]"/>}</Link><div className="min-w-0"><h3 className="m-0 break-words text-base font-black text-slate-950">{item.title}</h3><div className="mt-2 flex flex-wrap gap-1.5"><span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-extrabold text-slate-600">{item.category}</span><span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-extrabold text-slate-600">{item.status}</span>{(item.devices||["desktop"]).map((device:string)=><span className="rounded-full bg-slate-900 px-2.5 py-1 text-[10px] font-extrabold text-white" key={device}>{device==="desktop"?"PC":device==="tablet"?"Tablet":"Mobile"}</span>)}</div><div className="mt-2"><PublishedAt value={item.publishedAt?new Date(item.publishedAt).toISOString():null}/></div>{item.moderationReason?<p className="mt-2 break-words text-xs leading-5 text-slate-500">{item.moderationReason}</p>:null}</div><AdminWallpaperActions wallpaperId={String(item._id)} status={item.status}/></article>})}</div>}</section></main>;
 }
