@@ -1,4 +1,4 @@
-import type {ButtonHTMLAttributes, InputHTMLAttributes, ReactNode} from "react";
+import type {ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes} from "react";
 
 const buttonStyles = {
   default:
@@ -62,7 +62,7 @@ export function Input({
 export function Select({
   className = "",
   ...props
-}: React.SelectHTMLAttributes<HTMLSelectElement>) {
+}: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
       {...props}
