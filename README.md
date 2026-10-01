@@ -133,15 +133,15 @@ These ImageKit references represent the current UI direction of the application.
 
 ### Moderation UI
 
-![Moderation](https://ik.imagekit.io/xvqovhmcyr/Wallpaper_app/Wallpaper%20-%20Google%20Chrome%2010_1_2026%205_03_05%20PM.png)
+![Moderation](https://ik.imagekit.io/xvqovhmcyr/Wallpaper_app/Wallpaper%20SaaS%20-%20Google%20Chrome%2010_1_2026%205_03_05%20PM.png)
 
 ### Wallpaper actions
 
-![Wallpaper actions](https://ik.imagekit.io/xvqovhmcyr/Wallpaper_app/Wallpaper%20-%20Google%20Chrome%2010_1_2026%205_02_01%20PM.png)
+![Wallpaper actions](https://ik.imagekit.io/xvqovhmcyr/Wallpaper_app/Wallpaper%20SaaS%20-%20Google%20Chrome%2010_1_2026%205_02_01%20PM.png)
 
 ### Responsive reference
 
-![Responsive reference](https://ik.imagekit.io/xvqovhmcyr/Wallpaper_app/Wallpaper%20-%20Google%20Chrome%2010_1_2026%205_02_09%20PM.png)
+![Responsive reference](https://ik.imagekit.io/xvqovhmcyr/Wallpaper_app/Wallpaper%20SaaS%20-%20Google%20Chrome%2010_1_2026%205_02_09%20PM.png)
 
 ---
 
