@@ -4,6 +4,7 @@ import {redirect} from "next/navigation";
 import {connectDB} from "@/lib/mongodb";
 import User from "@/models/User";
 import AdminUserTable from "@/components/admin-user-table";
+import PageShell from "@/components/page-shell";
 import {Select,Input} from "@/components/ui";
 
 export const dynamic="force-dynamic";
