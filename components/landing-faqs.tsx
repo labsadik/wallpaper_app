@@ -1,24 +1,10 @@
-const FAQS=[
-  ["Can I browse without an account?","Yes. Published items can be discovered and opened publicly. An account is required for actions such as liking, saving and downloading."],
-  ["Can publishers choose the target device?","Yes. Each upload is assigned to one target device version—PC, Tablet or Mobile—and the stored image keeps its natural proportions."],
-  ["How does sharing work?","Every published item has a share action. Successful shares are counted on the item detail page, alongside likes, saves and downloads."],
-  ["What appears on a public profile?","A public profile can show the publisher name, username, avatar, verification status, followers, following, published item total and total downloads, without exposing private account details."],
-  ["Are media URLs exposed directly?","No. The application uses same-origin signed media delivery instead of placing the Bunny origin URL in the public UI."]
-] as const;
+const FAQS=[["Can I browse without an account?","Yes. Published items can be discovered and opened publicly. An account is required for actions such as liking, saving and downloading."],["Can publishers choose the target device?","Yes. Each upload is assigned to one target device version—PC, Tablet or Mobile—and the stored image keeps its natural proportions."],["How does sharing work?","Every published item has a share action. Successful shares are counted on the item detail page, alongside likes, saves and downloads."],["What appears on a public profile?","A public profile can show the publisher name, username, avatar, verification status, followers, following, published item total and total downloads, without exposing private account details."],["Are media URLs exposed directly?","No. The application uses same-origin signed media delivery instead of placing the Bunny origin URL in the public UI."]] as const;
 
 export default function LandingFaqs(){
-  return <section className="landing-faq-section">
-    <div className="container landing-faq-grid">
-      <div>
-        <span className="landing-kicker">FAQ</span>
-        <h2>Questions, answered simply.</h2>
-      </div>
-      <div className="landing-faq-list">
-        {FAQS.map(([question,answer])=><details key={question}>
-          <summary>{question}</summary>
-          <p>{answer}</p>
-        </details>)}
-      </div>
+  return <section className="bg-white">
+    <div className="mx-auto grid w-full max-w-[1180px] gap-8 px-5 py-14 sm:px-6 sm:py-18 lg:grid-cols-[.65fr_1.35fr] lg:px-8 lg:py-20">
+      <div><span className="text-xs font-extrabold uppercase tracking-[0.14em] text-slate-500">FAQ</span><h2 className="mt-2 text-3xl font-black leading-tight tracking-[-0.035em] text-slate-950 sm:text-4xl">Questions, answered simply.</h2></div>
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">{FAQS.map(([question,answer])=><details className="border-b border-slate-200 px-4 last:border-b-0 sm:px-5" key={question}><summary className="cursor-pointer list-none py-4 pr-8 text-sm font-extrabold text-slate-900 marker:hidden">{question}<span className="float-right text-slate-400">＋</span></summary><p className="pb-4 text-sm leading-6 text-slate-600">{answer}</p></details>)}</div>
     </div>
   </section>;
 }
