@@ -1,50 +1,13 @@
 "use client";
 
 import {useEffect,useState} from "react";
+import Link from "next/link";
 
 export default function ProfileFollowButton({username,initialFollowing=false,isSelf=false,authenticated=false}:{username:string;initialFollowing?:boolean;isSelf?:boolean;authenticated?:boolean}){
-  const [following,setFollowing]=useState(initialFollowing);
-  const [busy,setBusy]=useState(false);
-  const [message,setMessage]=useState("");
-
-  useEffect(()=>{
-    if(!authenticated||isSelf)return;
-    fetch("/api/profile/"+encodeURIComponent(username)+"/follow",{cache:"no-store"})
-      .then(response=>response.ok?response.json():null)
-      .then(data=>{
-        if(data){
-          setFollowing(Boolean(data.following));
-        }
-      })
-      .catch(()=>{});
-  },[username,authenticated,isSelf]);
-
-  if(isSelf)return <a className="btn" href="/account">Edit profile</a>;
-  if(!authenticated)return <a className="btn btn-primary" href="/login">Follow</a>;
-
-  async function toggle(){
-    setBusy(true);
-    setMessage("");
-    try{
-      const response=await fetch("/api/profile/"+encodeURIComponent(username)+"/follow",{method:"POST"});
-      const data=await response.json().catch(()=>({}));
-      if(!response.ok){
-        setMessage(data.error||"Could not update follow status.");
-        return;
-      }
-      setFollowing(Boolean(data.following));
-      window.dispatchEvent(new CustomEvent("profile-follow-counts",{detail:{username,followers:data.followers,followingCount:data.followingCount}}));
-    }catch{
-      setMessage("Network error. Please try again.");
-    }finally{
-      setBusy(false);
-    }
-  }
-
-  return <div className="profile-follow-control">
-    <button type="button" className={following?"btn":"btn btn-primary"} onClick={toggle} disabled={busy}>
-      {busy?"Saving…":following?"Following":"Follow"}
-    </button>
-    {message?<span className="profile-follow-error" role="status">{message}</span>:null}
-  </div>;
+  const [following,setFollowing]=useState(initialFollowing),[busy,setBusy]=useState(false),[message,setMessage]=useState("");
+  useEffect(()=>{if(!authenticated||isSelf)return;fetch("/api/profile/"+encodeURIComponent(username)+"/follow",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(data=>data&&setFollowing(Boolean(data.following))).catch(()=>{});},[username,authenticated,isSelf]);
+  if(isSelf)return <Link className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-extrabold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50" href="/account">Edit profile</Link>;
+  if(!authenticated)return <Link className="inline-flex min-h-10 items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-extrabold text-white shadow-sm transition hover:bg-slate-800" href="/login">Follow</Link>;
+  async function toggle(){setBusy(true);setMessage("");try{const response=await fetch("/api/profile/"+encodeURIComponent(username)+"/follow",{method:"POST"});const data=await response.json().catch(()=>({}));if(!response.ok){setMessage(data.error||"Could not update follow status.");return;}setFollowing(Boolean(data.following));window.dispatchEvent(new CustomEvent("profile-follow-counts",{detail:{username,followers:data.followers,followingCount:data.followingCount}}));}catch{setMessage("Network error. Please try again.");}finally{setBusy(false);}}
+  return <div className="flex flex-wrap items-center gap-2"><button type="button" className={following?"inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-extrabold text-slate-700 shadow-sm transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400":"inline-flex min-h-10 items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-extrabold text-white shadow-sm transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"} onClick={toggle} disabled={busy}>{busy?"Saving…":following?"Following":"Follow"}</button>{message?<span className="text-xs font-bold text-rose-600" role="status">{message}</span>:null}</div>;
 }
