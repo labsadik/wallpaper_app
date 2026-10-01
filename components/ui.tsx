@@ -1,4 +1,4 @@
-import type {ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes} from "react";
+import type {ButtonHTMLAttributes, InputHTMLAttributes, SelectHTMLAttributes, ReactNode, SelectHTMLAttributes} from "react";
 
 const buttonStyles = {
   default:
