@@ -42,7 +42,7 @@ export default function WallpaperViewer({
         {image
           ? <Image
               className="protected-image mx-auto block h-auto max-h-[75vh] w-full object-contain"
-              draggable={false}
+             
               onDragStart={event=>event.preventDefault()}
               src={image.url}
               alt={title+" - "+(LABELS[device]||device)}
