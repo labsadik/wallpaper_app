@@ -1838,6 +1838,27 @@ These are intentionally redirected:
 
 ---
 
+## License
+
+**Proprietary Commercial Source-Available License — All Rights Reserved**
+
+This repository is **not open source**. The Software is published publicly for portfolio demonstration, viewing, and auditing purposes only.
+
+Use, execution, copying, downloading, modification, merging, forking, distribution, sublicensing, resale, derivative works, reverse engineering, extraction of proprietary algorithms, and use of repository materials to train, fine-tune, or prompt AI/ML systems are prohibited unless expressly authorized in a prior, mutually executed written commercial license agreement.
+
+No personal, academic, or commercial use is granted by publication of this repository.
+
+Copyright (c) 2026 Sadik Laskar. All Rights Reserved.
+
+For commercial licensing, enterprise acquisition, or written permission:
+
+**Sadik Laskar**  
+**Email:** emailme.sadik@gmail.com
+
+See the full legal terms in the [LICENSE](LICENSE) file.
+
+---
+
 ## Repository
 
 GitHub: https://github.com/WorkRCS/wallpaper_app
