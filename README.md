@@ -924,7 +924,7 @@ This gives the application a server-controlled media boundary instead of exposin
 
 ### 1. Clone
 
-    git clone https://github.com/WorkRCS/wallpaper_app.git
+    git clone https://github.com/labsadik/wallpaper_app.git
     cd wallpaper_app
 
 ### 2. Verify Node
@@ -1261,7 +1261,7 @@ The CI load baseline uses 100 requests with 10 concurrent workers and targets /a
 
 ### 1. Import
 
-Import WorkRCS/wallpaper_app into Vercel.
+Import labsadik/wallpaper_app into Vercel.
 
 ### 2. Environment variables
 
@@ -1861,6 +1861,6 @@ See the full legal terms in the [LICENSE](LICENSE) file.
 
 ## Repository
 
-GitHub: https://github.com/WorkRCS/wallpaper_app
+GitHub: https://github.com/labsadik/wallpaper_app
 
 This README is the practical A-to-Z guide for understanding, setting up, testing, deploying and operating the current Wallpaper SaaS codebase.
