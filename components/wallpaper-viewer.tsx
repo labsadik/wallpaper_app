@@ -42,7 +42,6 @@ export default function WallpaperViewer({
         {image
           ? <Image
               className="protected-image mx-auto block h-auto max-h-[75vh] w-full object-contain"
-              draggable={false}
               onDragStart={event=>event.preventDefault()}
               src={image.url}
               alt={title+" - "+(LABELS[device]||device)}
@@ -50,6 +49,7 @@ export default function WallpaperViewer({
               height={image.height}
               sizes="(max-width: 900px) 100vw, 900px"
               unoptimized
+              loading="eager"
             />
           : <div className="grid min-h-[360px] place-items-center bg-slate-100 p-8 text-center">
               <span className="text-sm font-semibold text-slate-500">Image unavailable for this device.</span>

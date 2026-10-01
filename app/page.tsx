@@ -56,7 +56,7 @@ export default async function HomePage(){
                   {variant?.key
                     ? <Image
                         className="protected-image"
-                        draggable={false}
+                       
                         src={signedMediaUrl(variant.key)}
                         alt={item.title}
                         width={width}
