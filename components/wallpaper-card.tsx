@@ -33,7 +33,7 @@ export default function WallpaperCard({
                 alt={title}
                 width={width}
                 height={height}
-                draggable={false}
+               
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                 unoptimized
               />

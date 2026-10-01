@@ -33,7 +33,7 @@ export default function Header({session}:{session:Session|null}){
               >
                 <span className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-full bg-slate-900 text-xs font-black text-white">
                   {avatarUrl
-                    ? <Image src={avatarUrl} alt="" width={32} height={32} draggable={false} className="protected-image size-8 object-cover" unoptimized/>
+                    ? <Image src={avatarUrl} alt="" width={32} height={32} className="protected-image size-8 object-cover" unoptimized/>
                     : displayName.slice(0,1).toUpperCase()}
                 </span>
                 <span className="hidden min-w-0 truncate text-[13px] font-extrabold text-slate-800 sm:inline">{displayName}</span>
