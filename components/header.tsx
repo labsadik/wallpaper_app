@@ -18,7 +18,7 @@ export default function Header({session}:{session:Session|null}){
         </Link>
 
         <nav className="flex min-w-0 items-center justify-end gap-1.5 sm:gap-2" aria-label="Primary navigation">
-          <Link href="/items" className="hidden rounded-lg px-2.5 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 sm:inline-flex">
+          <Link href="/items" className="inline-flex rounded-lg px-2.5 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950">
             Wallpapers
           </Link>
           {role==="publisher"||role==="admin"?<Link href="/publisher" className="hidden rounded-lg px-2.5 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 md:inline-flex">Publisher</Link>:null}
