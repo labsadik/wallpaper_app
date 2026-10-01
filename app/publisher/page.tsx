@@ -10,82 +10,20 @@ import PublisherWallpaperActions from "@/components/publisher-wallpaper-actions"
 import WallpaperCard from "@/components/wallpaper-card";
 
 const STATUS_LABELS=[["processing","Processing"],["pending_review","Pending review"],["published","Published"]] as const;
-
 export const dynamic="force-dynamic";
 
 export default async function PublisherPage(){
-  const session=await getActiveSession();
-  if(!session) redirect("/login");
-  if(!["publisher","admin"].includes(session.user.role)) redirect("/account");
-
-  await connectDB();
-  await autoPublishDueWallpapers();
-  const publisherFilter=session.user.role==="admin"?{}:{publisherId:session.user.id};
-  const [items,counts]=await Promise.all([
-    Wallpaper.find({...publisherFilter,status:{$ne:"archived"}}).sort({createdAt:-1}).limit(12).lean(),
-    Promise.all(STATUS_LABELS.map(async([status])=>[status,await Wallpaper.countDocuments({...publisherFilter,status})] as const))
-  ]);
+  const session=await getActiveSession();if(!session)redirect("/login");if(!["publisher","admin"].includes(session.user.role))redirect("/account");
+  await connectDB();await autoPublishDueWallpapers();const publisherFilter=session.user.role==="admin"?{}:{publisherId:session.user.id};
+  const [items,counts]=await Promise.all([Wallpaper.find({...publisherFilter,status:{$ne:"archived"}}).sort({createdAt:-1}).limit(12).lean(),Promise.all(STATUS_LABELS.map(async([status])=>[status,await Wallpaper.countDocuments({...publisherFilter,status})] as const))]);
   const countMap=Object.fromEntries(counts) as Record<string,number>;
-
-  return <main className="container" style={{padding:"48px 0 80px"}}>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"end",gap:18,flexWrap:"wrap"}}>
-      <div>
-        <p className="muted" style={{margin:"0 0 6px",fontWeight:700}}>Publisher Studio</p>
-        <h1 style={{fontSize:"clamp(34px,5vw,48px)",margin:0}}>Your wallpapers</h1>
-        <p className="muted" style={{maxWidth:720,margin:"10px 0 0"}}>Upload once. Processing is automatic; every new wallpaper is scheduled 20 seconds after processing completes, with a background job finalizing due uploads.</p>
-      </div>
-      <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-        <Link href="/publisher/upload" className="btn btn-primary">Upload wallpaper</Link>
-        <Link href="/items" className="btn">View gallery</Link>
-      </div>
-    </div>
-
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:14,marginTop:24}}>
-      {STATUS_LABELS.map(([status,label])=><div className="card" key={status} style={{padding:20}}>
-        <p className="muted" style={{margin:0,fontSize:13}}>{label}</p>
-        <strong style={{fontSize:32,display:"block",marginTop:7}}>{countMap[status]||0}</strong>
-      </div>)}
-    </div>
-
-    <section style={{marginTop:28}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,marginBottom:14}}>
-        <div>
-          <h2 style={{fontSize:24,margin:0}}>Recent uploads</h2>
-          <p className="muted" style={{margin:"4px 0 0"}}>Category, status, target devices and publishing controls are shown on every item.</p>
-        </div>
-      </div>
-
-      {items.length===0
-        ? <div className="card" style={{padding:28}}>
-            <h3 style={{margin:"0 0 8px",fontSize:20}}>No active uploads</h3>
-            <p className="muted" style={{margin:"0 0 16px"}}>Start with an image, choose its category and select PC, Tablet or Mobile.</p>
-            <Link href="/publisher/upload" className="btn btn-primary">Create first upload</Link>
-          </div>
-        : <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:16}}>
-            {items.map(item=><div key={String(item._id)} style={{display:"grid",gap:8}}>
-              <WallpaperCard
-                slug={item.slug}
-                title={item.title}
-                category={item.category}
-                likes={item.likeCount}
-                downloads={item.downloadCount}
-                imageUrl={item.variants?.[item.devices?.[0]||"desktop"]?.key?signedMediaUrl(item.variants?.[item.devices?.[0]||"desktop"]?.key):undefined}
-                devices={item.devices||["desktop"]}
-                publishedAt={item.publishedAt?new Date(item.publishedAt).toISOString():null}
-              />
-              <div style={{display:"flex",gap:7,flexWrap:"wrap",padding:"0 2px",alignItems:"center"}}>
-                <AutoPublishIndicator wallpaperId={String(item._id)} status={item.status} publishAt={item.publishAt?new Date(item.publishAt).toISOString():null}/>
-                <span className={item.qualityStatus==="pass"?"badge badge-selected":"badge"}>{item.qualityStatus}</span>
-                <PublisherWallpaperActions wallpaperId={String(item._id)} status={item.status}/>
-              </div>
-            </div>)}
-          </div>
-      }
+  return <main className="mx-auto w-full max-w-[1180px] px-5 pb-20 pt-8 sm:px-6 sm:pt-10 lg:px-8">
+    <div className="mb-7 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-[0.14em] text-slate-500">Publisher Studio</p><h1 className="mt-1 text-4xl font-black tracking-[-0.045em] text-slate-950 sm:text-5xl">Your wallpapers</h1><p className="mt-3 max-w-2xl text-[15px] leading-7 text-slate-500">Upload once. Processing is automatic, target-device output is optimized, and pending uploads receive background publishing.</p></div><div className="flex flex-wrap gap-2"><Link href="/publisher/upload" className="btn btn-primary">Upload wallpaper</Link><Link href="/items" className="btn">View gallery</Link></div></div>
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">{STATUS_LABELS.map(([status,label],index)=><div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" key={status}><p className="m-0 text-xs font-bold text-slate-500">{label}</p><strong className="mt-1.5 block text-3xl font-black tracking-[-0.03em] text-slate-950">{countMap[status]||0}</strong><span className="mt-1 block text-[11px] font-semibold text-slate-400">{index===0?"Being processed":index===1?"Awaiting publication":"Live in the gallery"}</span></div>)}</div>
+    <section className="mt-8"><div className="mb-4 flex items-end justify-between gap-4"><div><p className="text-xs font-extrabold uppercase tracking-[0.14em] text-slate-500">Workspace</p><h2 className="mt-1 text-2xl font-black tracking-[-0.025em] text-slate-950">Recent uploads</h2><p className="mt-1 text-sm leading-6 text-slate-500">Status, quality and publishing actions stay close to every upload.</p></div></div>
+      {items.length===0?<div className="rounded-2xl border border-dashed border-slate-300 bg-white p-9"><h3 className="m-0 text-lg font-black text-slate-950">No active uploads</h3><p className="mt-1 max-w-lg text-sm leading-6 text-slate-500">Start with an image, choose a category and select one target device.</p><Link href="/publisher/upload" className="mt-4 inline-flex min-h-10 items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-extrabold text-white hover:bg-slate-800">Create first upload</Link></div>
+      :<div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{items.map(item=><div key={String(item._id)} className="grid gap-2.5"><WallpaperCard slug={item.slug} title={item.title} category={item.category} likes={item.likeCount} downloads={item.downloadCount} imageUrl={item.variants?.[item.devices?.[0]||"desktop"]?.key?signedMediaUrl(item.variants?.[item.devices?.[0]||"desktop"]?.key):undefined} devices={item.devices||["desktop"]} publishedAt={item.publishedAt?new Date(item.publishedAt).toISOString():null}/><div className="flex flex-wrap items-center gap-1.5 px-0.5"><AutoPublishIndicator wallpaperId={String(item._id)} status={item.status} publishAt={item.publishAt?new Date(item.publishAt).toISOString():null}/><span className={item.qualityStatus==="pass"?"rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-extrabold text-emerald-700":"rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-extrabold text-slate-600"}>{item.qualityStatus}</span><PublisherWallpaperActions wallpaperId={String(item._id)} status={item.status}/></div></div>)}</div>}
     </section>
-
-    <div className="card" style={{padding:22,marginTop:28}}>
-      <h2 style={{fontSize:22,margin:0}}>Automatic publishing</h2>
-      <p className="muted" style={{marginTop:8}}>New uploads enter Pending review with an automatic publish time 20 seconds later. The publisher screen shows the countdown and can publish immediately or delete the publisher’s own post. Server-side due checks run on normal requests, and the production cron also finalizes overdue pending items in the background.</p>
-    </div>
+    <section className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:p-6"><div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"><div><p className="text-xs font-extrabold uppercase tracking-[0.14em] text-slate-500">Automation</p><h2 className="mt-1 text-xl font-black tracking-[-0.02em] text-slate-950">Automatic publishing</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">New uploads enter Pending review with an automatic publish time 20 seconds later. The countdown is shown in the workspace, while server-side due checks and production cron finalize overdue items.</p></div><Link href="/publisher/upload" className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-extrabold text-slate-700 hover:bg-slate-100">Upload another</Link></div></section>
   </main>;
 }
