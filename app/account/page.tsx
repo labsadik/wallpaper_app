@@ -22,7 +22,7 @@ export default async function AccountPage(){
     <div className="grid gap-5">
       <section className="flex flex-wrap items-center gap-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <div className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-full bg-slate-900 text-2xl font-black text-white ring-4 ring-slate-100">
-          {avatarUrl?<Image className="protected-image size-20 object-cover" draggable={false} src={avatarUrl} alt="Profile avatar" width={80} height={80} unoptimized/>:<span>{(session.user.name||"U").slice(0,1).toUpperCase()}</span>}
+          {avatarUrl?<Image className="protected-image size-20 object-cover" src={avatarUrl} alt="Profile avatar" width={80} height={80} unoptimized/>:<span>{(session.user.name||"U").slice(0,1).toUpperCase()}</span>}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2"><h2 className="m-0 text-2xl font-black tracking-[-0.025em] text-slate-950">{session.user.name||"Account"}</h2>{role==="publisher"&&session.user.isVerified?<VerifiedBadge/>:null}</div>
