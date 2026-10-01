@@ -4,148 +4,25 @@ import {useState} from "react";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 
-type AdminUser={
-  _id?:string;
-  id?:string;
-  name:string;
-  email:string;
-  role:"user"|"publisher"|"admin";
-  status:"active"|"suspended"|"banned";
-  suspensionUntil?:string|Date|null;
-  suspensionReason?:string|null;
-  banReason?:string|null;
-  createdAt?:string|Date;
-  isVerified?:boolean;
-  username?:string|null;
-};
-
-const DURATIONS=[
-  ["1h","1 hour"],
-  ["24h","24 hours"],
-  ["7d","7 days"],
-  ["30d","30 days"],
-  ["permanent","Permanent"]
-] as const;
+type AdminUser={_id?:string;id?:string;name:string;email:string;role:"user"|"publisher"|"admin";status:"active"|"suspended"|"banned";suspensionUntil?:string|Date|null;suspensionReason?:string|null;banReason?:string|null;createdAt?:string|Date;isVerified?:boolean;username?:string|null};
+const DURATIONS=[["1h","1 hour"],["24h","24 hours"],["7d","7 days"],["30d","30 days"],["permanent","Permanent"]] as const;
+const selectClass="min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-200/70 disabled:cursor-not-allowed disabled:bg-slate-50";
+const buttonClass="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-extrabold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:cursor-not-allowed disabled:opacity-60";
+const primaryClass="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-900 bg-slate-900 px-3.5 py-2 text-sm font-extrabold text-white shadow-sm transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:cursor-not-allowed disabled:opacity-60";
 
 export default function AdminUserTable({users:initialUsers,currentAdminId}:{users:AdminUser[];currentAdminId:string}){
-  const router=useRouter();
-  const [users,setUsers]=useState(initialUsers);
-  const [busy,setBusy]=useState<string|null>(null);
-  const [message,setMessage]=useState("");
-
-  async function act(userId:string,body:Record<string,string>){
-    setBusy(userId);
-    setMessage("");
-    try{
-      const response=await fetch("/api/admin/users/"+userId,{
-        method:"PATCH",
-        headers:{"content-type":"application/json"},
-        body:JSON.stringify(body)
-      });
-      const data=await response.json().catch(()=>({}));
-      if(!response.ok){
-        setMessage(data.error||"Action failed.");
-        return;
-      }
-      setUsers(current=>current.map(user=>(String(user._id||user.id)===userId?{...user,...data.user}:user)));
-      setMessage("Account updated successfully.");
-      router.refresh();
-    }catch{
-      setMessage("Network error. Try again.");
-    }finally{
-      setBusy(null);
-    }
-  }
-
-  return <div style={{display:"grid",gap:12}}>
-    {message?<div className="admin-action-message card" role="status">{message}</div>:null}
-    {users.map(user=>{
-      const id=String(user._id||user.id);
-      const isSelf=id===currentAdminId;
-      const verified=Boolean(user.isVerified);
-      return <article className="card admin-user-card" key={id}>
-        <div className="admin-user-heading">
-          <div style={{minWidth:0}}>
-            <div className="admin-user-name-row">
-              <h2><Link href={"/admin/users/"+id}>{user.name}</Link></h2>
-              {user.role==="publisher"
-                ? <span className={verified?"admin-verification-status is-verified":"admin-verification-status"}>
-                    <span className="admin-verification-dot"/>{verified?"Verified publisher":"Not verified"}
-                  </span>
-                : null}
-            </div>
-            <p className="muted admin-user-identity">{user.username?"@"+user.username+" · ":""}{user.email}</p>
-            <div className="admin-user-badges">
-              <span className="badge">{user.role}</span>
-              <span className={user.status==="active"?"badge badge-selected":"badge"}>{user.status}</span>
-              {user.suspensionUntil?<span className="badge">until {new Date(user.suspensionUntil).toLocaleString()}</span>:null}
-            </div>
-          </div>
-          <span className="muted admin-user-joined">Joined {user.createdAt?new Date(user.createdAt).toLocaleDateString():"—"}</span>
-        </div>
-
-        <div className="admin-control-grid">
-          <label className="admin-control-field">
-            <span>Role</span>
-            <select
-              value={user.role}
-              disabled={busy===id||isSelf}
-              onChange={event=>act(id,{action:"role",role:event.target.value})}
-              className="theme-select"
-            >
-              <option value="user">User</option>
-              <option value="publisher">Publisher</option>
-              <option value="admin">Admin</option>
-            </select>
-          </label>
-
-          <label className="admin-control-field">
-            <span>Suspend for</span>
-            <select
-              defaultValue=""
-              disabled={busy===id||isSelf||user.status==="banned"}
-              onChange={event=>{
-                const duration=event.target.value;
-                if(duration)act(id,{action:"suspend",duration});
-                event.currentTarget.value="";
-              }}
-              className="theme-select"
-            >
-              <option value="">Select duration…</option>
-              {DURATIONS.map(([value,label])=><option key={value} value={value}>{label}</option>)}
-            </select>
-          </label>
-
-          {user.role==="publisher"
-            ? <div className={verified?"admin-verification-control is-verified":"admin-verification-control"}>
-                <div>
-                  <strong>Publisher verification</strong>
-                  <span>{verified?"Verified and shown with a check badge.":"Not verified; public profile shows publisher status only."}</span>
-                </div>
-                <button
-                  className={verified?"btn":"btn btn-primary"}
-                  disabled={busy===id}
-                  onClick={()=>act(id,{action:verified?"unverify":"verify"})}
-                  type="button"
-                >
-                  {busy===id?"Saving…":verified?"Remove verification":"Verify publisher"}
-                </button>
-              </div>
-            : <div className="admin-control-note">
-                <strong>Verification</strong>
-                <span>Verification is available after this account has the Publisher role.</span>
-              </div>}
-
-          <div className="admin-action-row">
-            {user.status==="suspended"?<button className="btn" disabled={busy===id} onClick={()=>act(id,{action:"unsuspend"})}>{busy===id?"Saving…":"Unsuspend"}</button>:null}
-            {user.status==="banned"
-              ? <button className="btn" disabled={busy===id||isSelf} onClick={()=>act(id,{action:"unban"})}>{busy===id?"Saving…":"Unban"}</button>
-              : <button className="btn" disabled={busy===id||isSelf} onClick={()=>act(id,{action:"ban",reason:"Administrative ban"})}>{busy===id?"Saving…":"Ban"}</button>}
-          </div>
-        </div>
-
-        {(user.suspensionReason||user.banReason)?<p className="muted admin-user-reason">{user.suspensionReason||user.banReason}</p>:null}
-      </article>;
-    })}
+  const router=useRouter(),[users,setUsers]=useState(initialUsers),[busy,setBusy]=useState<string|null>(null),[message,setMessage]=useState("");
+  async function act(userId:string,body:Record<string,string>){setBusy(userId);setMessage("");try{const response=await fetch("/api/admin/users/"+userId,{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify(body)});const data=await response.json().catch(()=>({}));if(!response.ok){setMessage(data.error||"Action failed.");return;}setUsers(current=>current.map(user=>(String(user._id||user.id)===userId?{...user,...data.user}:user)));setMessage("Account updated successfully.");router.refresh();}catch{setMessage("Network error. Try again.");}finally{setBusy(null);}}
+  return <div className="grid gap-3">{message?<div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-sm font-bold text-emerald-700" role="status">{message}</div>:null}
+    {users.map(user=>{const id=String(user._id||user.id),isSelf=id===currentAdminId,verified=Boolean(user.isVerified);return <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" key={id}>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h2 className="m-0 text-base font-black tracking-[-0.01em] text-slate-950"><Link className="hover:underline" href={"/admin/users/"+id}>{user.name}</Link></h2>{user.role==="publisher"?<span className={verified?"inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-extrabold text-blue-700":"inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-extrabold text-slate-500"}><span className={verified?"size-1.5 rounded-full bg-blue-600":"size-1.5 rounded-full bg-slate-400"}/>{verified?"Verified publisher":"Not verified"}</span>:null}</div><p className="mt-1 break-words text-sm text-slate-500">{user.username?"@"+user.username+" · ":""}{user.email}</p><div className="mt-2 flex flex-wrap gap-1.5"><span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-extrabold text-slate-600">{user.role}</span><span className={user.status==="active"?"rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-extrabold text-emerald-700":"rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-extrabold text-slate-600"}>{user.status}</span>{user.suspensionUntil?<span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-extrabold text-slate-500">until {new Date(user.suspensionUntil).toLocaleString()}</span>:null}</div></div><span className="shrink-0 text-xs font-semibold text-slate-400">Joined {user.createdAt?new Date(user.createdAt).toLocaleDateString():"—"}</span></div>
+      <div className="mt-5 grid gap-3 md:grid-cols-2">
+        <label className="grid gap-1.5"><span className="text-xs font-extrabold uppercase tracking-wide text-slate-500">Role</span><select value={user.role} disabled={busy===id||isSelf} onChange={event=>act(id,{action:"role",role:event.target.value})} className={selectClass}><option value="user">User</option><option value="publisher">Publisher</option><option value="admin">Admin</option></select></label>
+        <label className="grid gap-1.5"><span className="text-xs font-extrabold uppercase tracking-wide text-slate-500">Suspend for</span><select defaultValue="" disabled={busy===id||isSelf||user.status==="banned"} onChange={event=>{const duration=event.target.value;if(duration)act(id,{action:"suspend",duration});event.currentTarget.value="";}} className={selectClass}><option value="">Select duration…</option>{DURATIONS.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
+        {user.role==="publisher"?<div className={verified?"md:col-span-2 flex flex-col gap-3 rounded-xl border border-blue-200 bg-blue-50/70 p-3.5 sm:flex-row sm:items-center sm:justify-between":"md:col-span-2 flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3.5 sm:flex-row sm:items-center sm:justify-between"}><div><strong className="text-sm font-black text-slate-900">Publisher verification</strong><p className="mt-0.5 text-xs leading-5 text-slate-500">{verified?"Verified and shown with a check badge.":"Not verified; public profile shows publisher status only."}</p></div><button className={verified?buttonClass:primaryClass} disabled={busy===id} onClick={()=>act(id,{action:verified?"unverify":"verify"})} type="button">{busy===id?"Saving…":verified?"Remove verification":"Verify publisher"}</button></div>:<div className="md:col-span-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3.5"><strong className="text-sm font-black text-slate-900">Verification</strong><p className="mt-0.5 text-xs leading-5 text-slate-500">Verification is available after this account has the Publisher role.</p></div>}
+        <div className="flex flex-wrap items-center justify-start gap-2 md:col-span-2">{user.status==="suspended"?<button className={buttonClass} disabled={busy===id} onClick={()=>act(id,{action:"unsuspend"})}>{busy===id?"Saving…":"Unsuspend"}</button>:null}{user.status==="banned"?<button className={buttonClass} disabled={busy===id||isSelf} onClick={()=>act(id,{action:"unban"})}>{busy===id?"Saving…":"Unban"}</button>:<button className={buttonClass} disabled={busy===id||isSelf} onClick={()=>act(id,{action:"ban",reason:"Administrative ban"})}>{busy===id?"Saving…":"Ban"}</button>}</div>
+      </div>
+      {(user.suspensionReason||user.banReason)?<p className="mt-3 break-words text-xs font-semibold leading-5 text-slate-500">{user.suspensionReason||user.banReason}</p>:null}
+    </article>;})}
   </div>;
 }
